@@ -42,7 +42,7 @@ build はこのテストを見ない。テストが勝手に決めた URL・パ�
 - spec が `scale: 小` なのに、AC を確かめるのに新しい URL・ルート・列・エラーコードが要る → 書かずに止まり、「中以上にして plan の『外の約束』で決めて」と伝える。小の受け入れテストは既存の約束だけで書く
 - この会話で build も plan も回していない。回していたら「新しいセッションで」と伝えて止まる
 - `.claude/project.md` の「受け入れテスト」が埋まっている。`<ここに: …>` のままなら、どの項目が無いかを伝えて止まる
-- `scripts/accept.sh` がある。無ければ「先に app に入れて」と伝えて止まる（置き場と採点のコマンド）
+- `scripts/accept.sh` と `.claude/harness.env`（`accept_run` がある）がある。無ければ「先に install.sh で入れて、harness.env を埋めて」と伝えて止まる
 - テストが使う DB などが応答する（環境の変数は project.md の「app の起動と URL」）
 
 ### 1. 読む（この順で）
@@ -87,12 +87,12 @@ accept.md を `status: approved` にして docs でコミットし、「次は�
 ## 置き場と採点のコマンド（このスキルの前提。app 側に先に入れる）
 - テストと記録は docs リポジトリの `docs/accept/<タスク名>/`。app の履歴には入れない
 - 採点のときのコピー先（project.md の「受け入れテスト」。既定は `tests/Acceptance/`）を app の `.gitignore` に足す。普段のテストの対象（テストランナーの設定や `scripts/check.sh` が回す範囲）には入れない。受け入れテストは普段の検査にも pre-push にも入らない
-- `scripts/accept.sh <タスク名>`: `docs/accept/<タスク名>/` のテストをコピー先にコピー → そのディレクトリだけテストを回す → 結果を出す → コピーを消す（`--keep` で残す）。中身は PJ で書く（README「app に用意するもの」）
+- `scripts/accept.sh <タスク名>`: `docs/accept/<タスク名>/` のテストをコピー先にコピー → そのディレクトリだけテストを回す → 結果を出す → コピーを消す（`--keep` で残す）。スクリプトはハーネスのもの。何で回すかは `.claude/harness.env` の `accept_run`（README §4）
 - 回すのは accept-test（3 で）と ac-review（検査で）。build は回さない
 
 ## build から守る（どこまで隠せるか）
 - **設定で止める**（`headless-build.json` の deny）: `Read(docs/accept/**)` `Edit(docs/accept/**)` `Read(tests/Acceptance/**)` `Edit(tests/Acceptance/**)`、`Bash(scripts/accept.sh*)` `Bash(./scripts/accept.sh*)` `Bash(bash scripts/accept.sh*)` `Bash(sh scripts/accept.sh*)`。
-  コピー先を変えたら deny のパスも変える。受け入れテストを直接回すコマンド（project.md の「受け入れテスト」）も deny に足す（README「headless-build.json に足すもの」）
+  コピー先を変えたら deny のパスも変える。受け入れテストを直接回すコマンド（project.md の「受け入れテスト」）も deny に足す（README §3 の「足すもの」）
 - **`Read` の deny が止めるもの**: Read・Grep・Glob（best effort）、`@` の参照、Bash の `cat` `head` `tail` `sed` `tee` とリダイレクト。サンドボックスが有効なら、Read の deny はサンドボックスの読み取り禁止にも併合され、`cp` や Python からも読めない（公式ドキュメントの記述）
 - **止められないもの**: `grep -r` のようにファイル名を書かない読み方（サンドボックス無しのとき）、**git の履歴**（`git show` `git log -p` `git diff` は `.git` の中身を読むので、パスの deny では止まらない）。だから app の履歴に入れない。docs の `.git` からは `(cd docs && git show …)` で読めるので、build の docs での git 操作は todo の add / commit だけに限る（build の Red Flags）
 - **それでも完全には隠せない。** 同じマシンの同じユーザーが読める場所にある限り、読もうと思えば読める。守りの本体は「build がそれを読まない」というスキルのルールと、ac-review が差分に受け入れテストと同じ形のテストが無いかを見ることにある
