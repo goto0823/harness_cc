@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git reset --hard*)",
+      "Bash(git reset * --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git clean --force*)",
+      "Bash(git clean * -f*)",
+      "Bash(git clean * --force*)",
+      "Bash(git clean -d*f*)",
+      "Bash(git clean -x*f*)",
+      "Bash(git restore .)",
+      "Bash(git restore . *)",
+      "Bash(git restore * .)",
+      "Bash(git restore * . *)",
+      "Bash(git restore ./)",
+      "Bash(git restore * ./)",
+      "Bash(git checkout .)",
+      "Bash(git checkout * .)",
+      "Bash(git checkout ./)",
+      "Bash(git checkout * ./)"
+    ]
+  }
+}

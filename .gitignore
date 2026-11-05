@@ -1,0 +1,5 @@
+# 個人用の設定（各自のマシンに置く。リポジトリに入れない）
+settings.local.json
+# Claude Code が作る作業ディレクトリ
+.cc-writes/
+worktrees/
