@@ -13,7 +13,7 @@ app の `.claude/project.md` に置き、`<ここに: …>` を PJ の値で埋�
 - docs のリポジトリ: <ここに: spec・plan・todo・review・debug・受け入れテストを置く、app とは別の git リポジトリ。app の `docs/` に clone し、app の `.gitignore` で `/docs/` ごと無視する>
 - PR の向き先（app のベースブランチ）: <ここに: 例 `main`>
 - docs のベースブランチ: <ここに: 例 `main`。build の todo と ac-review のレビューは手元のこのブランチに積み、`/ship` が `ship/<タスク名>` を切って PR にする>
-- 設計書: <ここに: 例 `docs/design/`。無ければ「なし」>
+- 設計書: <ここに: 例 `docs/design/`。無ければ「なし」（`/arch <層>` で書ける）>
 - ディレクトリごとの CLAUDE.md: <ここに: 例 `app/CLAUDE.md` → `docs/design/backend.md`、`tests/CLAUDE.md` → テストの書き方の決まり。無ければ「なし」。雛形は harness_cc の `templates/dir-CLAUDE.md`>
 - テストの書き方の決まり: <ここに: 例 `docs/design/test-strategy.md`。置き場・命名・文言の比べ方>
 
