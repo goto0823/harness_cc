@@ -9,6 +9,8 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 ## 1. スキルの流れ
 
 ```
+/arch（最初に 1 回。設計の規約を変えるとき）
+
 /spec → /plan → /accept-test → /build → /ui-check → /ac-review → /ship
                                    ↓ 壊れたら
                                 /debug
@@ -16,6 +18,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 
 | スキル | やること | どのセッションで |
 |---|---|---|
+| `/arch` | コードを数えて層の構成と依存の向きを出し、規約にするかを人に確かめながら、設計書（`docs/design/`）を書く | 人と対話 |
 | `/spec` | 対話で前提と受け入れ条件（AC）を固め、`docs/spec/<タスク名>-spec.md` に書く | 人と対話 |
 | `/plan` | approved な spec から、作業の順番と AC → テストの一覧を書く（中以上だけ） | 新しいセッション |
 | `/accept-test` | AC から、build が読めない受け入れテストを書き、「今は落ちる」を確かめる | **build と別のモデル** |
@@ -29,6 +32,11 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 - 軽微（typo・文言・lint）はスキルを通さず直す。既存のテストで再現できるバグは `/debug`
 - 小は `/plan` を飛ばす（`/accept-test` は spec の直後。任意）
 - 中以上は全部通す
+
+### 設計書を先に書く理由
+ac-review は、設計書に書かれた規約に反するものを**必須**にし、設計書に根拠を書けない設計の指摘は**任意**にしかできない。
+だから、大事な決まりが設計書に無いと、レビューで止められない。設計書が無い PJ では、`/arch <層>` から始める。
+`/arch` は今のコードを数と根拠つきで出すだけで、規約にするかどうかは人が決める（コードは今の姿で、決まりかどうかはコードに書いていないから）。
 
 ### 別のセッション・別のモデルにする理由
 同じ文脈で見ると、書いた理由がそのまま正しさに見える。受け入れテストを書くのと採点するのは、build と別のモデルで、build の会話の続きではないセッションで動かす。
@@ -64,7 +72,8 @@ harness_cc を clone して、app のルートを渡す:
 4. `CLAUDE.md` に `templates/CLAUDE.md` の 2 節を足す
 5. docs のリポジトリを app の `docs/` に clone し、`.gitignore` に `/docs/`・受け入れテストのコピー先・`.playwright-mcp/` を足す（§5）
 6. ui-check を使うなら Playwright の MCP を入れる（§6）
-7. 任意: 決まりが違う層のディレクトリ（バックエンド、テスト、フロントエンドなど）に、設計書を指す CLAUDE.md を置く（雛形は `templates/dir-CLAUDE.md`）。Claude Code は、そのディレクトリのファイルを読んだときにだけ読み込むので、その層を触るときにだけ決まりが入る
+7. 設計書（`docs/design/`）が無ければ、`/arch <層>` で書く。`/arch` が確定のあとに、層のディレクトリに置く CLAUDE.md の下書きも出す
+8. 任意: 決まりが違う層のディレクトリ（バックエンド、テスト、フロントエンドなど）に、設計書を指す CLAUDE.md を置く（雛形は `templates/dir-CLAUDE.md`）。Claude Code は、そのディレクトリのファイルを読んだときにだけ読み込むので、その層を触るときにだけ決まりが入る
 
 Claude Code は app のルートで起動する。`headless-build.json` のパス（`docs/spec/**` など）は起動したディレクトリが基準だから。
 
@@ -234,7 +243,7 @@ README.md                  この説明
 install.sh                 app に入れる・更新する
 settings.json              いつでも禁止（app の .claude/settings.json へ）
 headless-build.json        build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
-skills/                    8 つのスキル（app の .claude/skills/ へ）
+skills/                    9 つのスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
 scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
 scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
 templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）

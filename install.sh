@@ -7,7 +7,7 @@
 #
 # ファイルは 2 種類に分けて扱う:
 #   上流が持つもの（ハーネスの更新で変わる。app では書き換えない）… いつも上書きする
-#     .claude/skills/<8 つ>/SKILL.md、scripts/accept.sh、scripts/lib/check-lib.sh
+#     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/lib/check-lib.sh
 #   PJ が持つもの（最初に 1 回作ったら、あとは PJ が書き換える）… 無いときだけ作る。あれば触らない
 #     .claude/project.md、.claude/harness.env、.claude/headless-build.json、scripts/check.sh
 #   app にもう設定があるもの … 触らず、手で足すものを出す
@@ -62,10 +62,11 @@ do_copy() { # $1=元（here からの相対） $2=先（app からの相対） $
 }
 
 echo "==> 上流が持つもの（いつも上書き）"
-for d in "$here"/skills/*/; do
-  name="$(basename "$d")"
-  do_copy "skills/$name/SKILL.md" ".claude/skills/$name/SKILL.md" overwrite
-done
+# スキルのフォルダの中身（SKILL.md とテンプレートなど）をすべて
+while IFS= read -r f; do
+  rel="${f#"$here"/}"
+  do_copy "$rel" ".claude/$rel" overwrite
+done < <(find "$here/skills" -type f | sort)
 do_copy "scripts/accept.sh" "scripts/accept.sh" overwrite
 do_copy "scripts/lib/check-lib.sh" "scripts/lib/check-lib.sh" overwrite
 
