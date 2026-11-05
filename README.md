@@ -44,14 +44,27 @@ ac-review は `result: fail` にして 2 行目に「採点が成り立たない
 
 ## 2. 入れ方
 
-1. `skills/` を app の `.claude/skills/` にコピーする
-2. `settings.json` を app の `.claude/settings.json` に入れる（既にあれば `permissions.deny` を足す）
-3. `headless-build.json` を app の `.claude/headless-build.json` に置き、§3 の「足すもの」を足す
-4. `templates/project.md` を app の `.claude/project.md` にコピーし、`<ここに: …>` を埋める
-5. `templates/CLAUDE.md` の 2 節を、app の `CLAUDE.md` に足して埋める
-6. app に `scripts/check.sh` と `scripts/accept.sh` を用意する（§4）
-7. docs のリポジトリを app の `docs/` に clone し、app の `.gitignore` に `/docs/` と受け入れテストのコピー先を足す（§5）
-8. ui-check を使うなら Playwright の MCP を入れる（§6）
+harness_cc を clone して、app のルートを渡す:
+
+    ./install.sh <app のルート> --dry-run   # 何をするかだけ見る
+    ./install.sh <app のルート>
+
+ファイルは 2 種類に分けて扱う。
+
+| 種類 | ファイル | install.sh の扱い |
+|---|---|---|
+| **上流が持つ**（ハーネスの更新で変わる。app では書き換えない） | `.claude/skills/*`、`scripts/accept.sh`、`scripts/lib/check-lib.sh` | いつも上書き。ハーネスを更新したら、もう一度 install.sh を回す |
+| **PJ が持つ**（最初に 1 回作ったら、あとは PJ が書き換える） | `.claude/project.md`、`.claude/harness.env`、`.claude/headless-build.json`、`scripts/check.sh` | 無いときだけ作る。あれば触らない |
+| **app にもう設定がある** | `.claude/settings.json`、`CLAUDE.md`、`.gitignore` | 触らない。足りないものを出すので、手で足す |
+
+入れたあとにやること（install.sh も最後に出す）:
+1. `.claude/project.md` と `.claude/harness.env` の `<ここに: …>` を埋める
+2. `scripts/check.sh` の `todo "…"` を、PJ のコマンドにする（§4。見本は `examples/`）
+3. `.claude/headless-build.json` に、受け入れテストを直接回すコマンドの deny を足す（§3）
+4. `CLAUDE.md` に `templates/CLAUDE.md` の 2 節を足す
+5. docs のリポジトリを app の `docs/` に clone し、`.gitignore` に `/docs/`・受け入れテストのコピー先・`.playwright-mcp/` を足す（§5）
+6. ui-check を使うなら Playwright の MCP を入れる（§6）
+7. 任意: 決まりが違う層のディレクトリ（バックエンド、テスト、フロントエンドなど）に、設計書を指す CLAUDE.md を置く（雛形は `templates/dir-CLAUDE.md`）。Claude Code は、そのディレクトリのファイルを読んだときにだけ読み込むので、その層を触るときにだけ決まりが入る
 
 Claude Code は app のルートで起動する。`headless-build.json` のパス（`docs/spec/**` など）は起動したディレクトリが基準だから。
 
@@ -110,23 +123,67 @@ deny は**コマンドの文字列の形**で照合する。意味で止めて�
 期待: `git status --short` と todo.md の編集は通る。`git add -A`・`git stash list`・`git push --dry-run`・spec の編集は「denied」と報告される。
 終わったあと todo.md の空行を戻し、`git status --porcelain` が空のままであること。`--dry-run` は、万一 deny が効かなくても push しないための保険。
 
-## 4. app に用意するもの
+## 4. 検査と採点のスクリプト
 
-スキルは、この 2 つのスクリプトを名前で呼ぶ。中身は PJ で書く。
+スキルは `scripts/check.sh` と `scripts/accept.sh` を名前で呼ぶ。PJ ごとのことは `.claude/harness.env` に書く。
 
-### `scripts/check.sh [--quick]`
-- 引数なし: 全体の検査（lint・型・全テストなど）。通れば終了コード 0
-- `--quick`: 速い検査（DB に触らない範囲など）。build が 1 ステップごとに回す
-- 受け入れテストのコピー先は対象に入れない
-- pre-push で回すと、落ちるテストを push しにくくなる
+### `.claude/harness.env`（PJ が持つ）
+`accept.sh` と `check.sh` が `. .claude/harness.env` で読み込む、bash の設定ファイル。雛形は `templates/harness.env`。
+中身はそのままシェルとして実行されるので、信頼できる人だけが書き換えるファイルにし、秘密情報は書かない（`.env` から読む）。
 
-### `scripts/accept.sh <タスク名> [--keep]`
-1. `docs/accept/<タスク名>/` のテストを、受け入れテストのコピー先（既定 `tests/Acceptance/`）にコピーする。テストランナーが名前空間やディレクトリ名に決まりを持つなら、ここで合わせる
-2. コピー先だけを対象にテストを回す
-3. 結果を出す（終了コードもそのまま返す）
-4. コピーを消す（`--keep` なら残す）
+| 名前 | 種類 | 中身 |
+|---|---|---|
+| `accept_run` | 関数（必須） | 渡されたディレクトリのテストだけを回す。終了コードをそのまま返す |
+| `harness_env` | 関数（任意） | 環境変数だけを決める（DB の向き先など）。軽いので毎回呼ばれる |
+| `harness_prepare` | 関数（任意） | DB が起きているか、ビルドの生成物があるか。DB を使うテストの前にだけ呼ばれる。DB は起動しない（人がやる） |
+| `ACCEPT_DEST_ROOT` | 変数 | 受け入れテストのコピー先（既定 `tests/Acceptance`） |
+| `ACCEPT_GLOB` | 変数 | コピーするファイル（既定 `*`。`accept.md` はいつも除く） |
+| `ACCEPT_DIR_NAME` | 変数 | コピー先のディレクトリ名: `as-is` / `studly` / `snake` |
+| `CHECK_BASE` | 変数 | `check.sh --changed` の基準（既定 `origin/main`） |
 
-コピー先は app の `.gitignore` に入れ、普段のテストの対象（テストランナーの設定、`check.sh`）には入れない。受け入れテストは普段の検査にも pre-push にも入らない。
+`harness_env` と `harness_prepare` を分けているのは、`check.sh --quick` のように DB を使わない検査を、DB が起きていなくても回せるようにするため。
+
+### `scripts/accept.sh <タスク名> [--keep]`（上流が持つ）
+1. `docs/accept/<タスク名>/` のテストを、コピー先にコピーする
+2. `harness_env` → `harness_prepare` → `accept_run <コピー先>`
+3. 結果を出し、終了コードをそのまま返す（0 = 通った、1 = 落ちた・準備に失敗、2 = 使い方の誤り・設定が無い）
+4. コピーを消す。落ちても、Ctrl-C や TERM で止められても消す（`--keep` なら残す）
+
+タスク名は英小文字・数字・ハイフンだけを受け付ける。コピー先のパスに入れて `rm -rf` するので、`../` を含む名前で app の外を消さないため。
+コピー先は app の `.gitignore` に入れ、普段のテストの対象（テストランナーの設定、`check.sh`）には入れない。
+
+### `scripts/check.sh [--quick | --changed [<base>]] [--dry-run]`（PJ が持つ）
+- 引数なし: 全体の検査。`--quick`: 速い検査（build が 1 ステップごとに回す）。通れば終了コード 0、1 つでも落ちれば 1
+- `--changed` と `--dry-run` は任意。変更分の判定を書いた PJ だけが使う（pre-push で変更分だけを回すときなど）
+- 枠組み（オプションの解析、回す／回さないの計画、`run` / `skip`、集計）は `scripts/lib/check-lib.sh`。`check.sh` にはゲートだけを書く
+
+```bash
+set -uo pipefail
+cd "$(dirname "$0")/.."
+. scripts/lib/check-lib.sh "$@"
+
+GATES=("lint" "unit" "integration")
+[ "$MODE" = quick ] && plan_skip "integration" "--quick"
+[ "$DRY_RUN" = 1 ] && plan_print
+
+run "lint（静的検査）" <lint のコマンド>
+run "unit（DB なし）"  <unit テストのコマンド>
+if planned_skip "integration" || prepare_or_fail; then
+  run "integration（DB あり）" <DB を使うテストのコマンド>
+fi
+finish
+```
+
+check-lib.sh の決まり:
+- `run "<鍵>（<説明>）" <コマンド>`: 鍵（全角の括弧より前）が計画の単位。計画で回さないなら `SKIP: <理由>` を出して飛ばす。落ちても止めず、最後に `finish` がまとめて終了コードを返す（だから `set -e` は使わない）
+- `plan_skip "<鍵>" "<理由>"`: 回さない計画を積む。`--dry-run` の表示と実際の実行が、同じ計画から決まる
+- `switch_full "<理由>"`: 変更分の判定ができないとき、全量に倒す。それまでに積んだ「回さない」は捨てる。判定のループは break する
+- `todo "<何を書くか>"`: 雛形の埋め忘れ。回すと NG になる（埋め忘れたまま ALL GREEN にしないため）
+- `port_up <ホスト> <ポート>`: bash の `/dev/tcp` でポートが開いているかを見る。DB のクライアントが無くても使える
+- bash 3.2（macOS の既定）でも動くように書く。連想配列を使わない。空の配列は `${a[@]+"${a[@]}"}` で展開する
+
+### 見本（`examples/`）
+- `examples/laravel-vue/`: Laravel + Inertia + Vue（PHPUnit / phpstan / pint、vue-tsc / oxlint / vitest、PostgreSQL）。`--changed` の判定表つき。実際の PJ で使っていたものから、その PJ だけの事情を抜いた形
 
 ## 5. docs のリポジトリ
 
@@ -173,12 +230,19 @@ ui-check は `browser_navigate` のような短い名前で指しているので
 ## 7. このリポジトリの中身
 
 ```
-README.md              この説明
-settings.json          いつでも禁止（app の .claude/settings.json へ）
-headless-build.json    build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
-skills/                8 つのスキル（app の .claude/skills/ へ）
-templates/project.md   PJ ごとの値を書く雛形（app の .claude/project.md へ）
-templates/CLAUDE.md    規模と進め方・3 段階の雛形（app の CLAUDE.md へ足す）
+README.md                  この説明
+install.sh                 app に入れる・更新する
+settings.json              いつでも禁止（app の .claude/settings.json へ）
+headless-build.json        build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
+skills/                    8 つのスキル（app の .claude/skills/ へ）
+scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
+scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
+templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）
+templates/harness.env      スクリプトが読む PJ ごとの設定の雛形（app の .claude/harness.env へ）
+templates/scripts/check.sh 検査の雛形（app の scripts/check.sh へ）
+templates/CLAUDE.md        規模と進め方・3 段階の雛形（app の CLAUDE.md へ足す）
+templates/dir-CLAUDE.md    ディレクトリごとの CLAUDE.md の雛形（任意）
+examples/                  PJ の見本（今は laravel-vue）
 ```
 
 スキルの中の例（会議室予約の app、`AC-RCR-2` など）は、説明のための架空のもの。

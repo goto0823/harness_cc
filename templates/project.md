@@ -14,10 +14,11 @@ app の `.claude/project.md` に置き、`<ここに: …>` を PJ の値で埋�
 - PR の向き先（app のベースブランチ）: <ここに: 例 `main`>
 - docs のベースブランチ: <ここに: 例 `main`。build の todo と ac-review のレビューは手元のこのブランチに積み、`/ship` が `ship/<タスク名>` を切って PR にする>
 - 設計書: <ここに: 例 `docs/design/`。無ければ「なし」>
+- ディレクトリごとの CLAUDE.md: <ここに: 例 `app/CLAUDE.md` → `docs/design/backend.md`、`tests/CLAUDE.md` → テストの書き方の決まり。無ければ「なし」。雛形は harness_cc の `templates/dir-CLAUDE.md`>
 - テストの書き方の決まり: <ここに: 例 `docs/design/test-strategy.md`。置き場・命名・文言の比べ方>
 
 ## 検査
-`scripts/check.sh` と `scripts/accept.sh` は、ハーネスが app に求める約束。中身は PJ で決める（README「app に用意するもの」）。
+`scripts/check.sh` はハーネスのスキルが呼ぶ、PJ が持つスクリプト（雛形は `templates/scripts/check.sh`。README §4）。
 - 全体: `scripts/check.sh`（<ここに: 何を回すか。例 lint・型・全テスト。DB が要るか>）
 - 速い: `scripts/check.sh --quick`（<ここに: 何を回すか。DB に触らない範囲など>）
 - pre-push で回るか: <ここに: はい / いいえ>
@@ -29,6 +30,7 @@ app の `.claude/project.md` に置き、`<ここに: …>` を PJ の値で埋�
 
 ## 受け入れテスト
 - 置き場（docs の中）: `docs/accept/<タスク名>/`（ハーネスの決まり）
+- コピー先・ファイル名のパターン・回し方は `.claude/harness.env` の `ACCEPT_DEST_ROOT` / `ACCEPT_GLOB` / `accept_run` と同じにする
 - 採点のときのコピー先（app の中。app の `.gitignore` に入れる）: <ここに: 例 `tests/Acceptance/`>
 - ファイル名: <ここに: 例 `<画面か操作>AcceptanceTest.<拡張子>`>
 - 継承する土台・使うヘルパー: <ここに: 例 テストの基底クラス、ロールでログインするヘルパー、結果を比べるヘルパー>
