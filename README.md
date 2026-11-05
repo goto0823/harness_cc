@@ -72,7 +72,7 @@ harness_cc を clone して、app のルートを渡す:
 4. `CLAUDE.md` に `templates/CLAUDE.md` の 2 節を足す
 5. docs のリポジトリを app の `docs/` に clone し、`.gitignore` に `/docs/`・受け入れテストのコピー先・`.playwright-mcp/` を足す（§5）
 6. ui-check を使うなら Playwright の MCP を入れる（§6）
-7. 設計書（`docs/design/`）が無ければ、`/arch <層>` で書く。`/arch` が確定のあとに、層のディレクトリに置く CLAUDE.md の下書きも出す
+7. 設計書（`docs/design/`）が無ければ、`/arch <層>` で書く。`/arch` は確定のあとに、層のディレクトリに設計書の節を指す CLAUDE.md を自動で置く（人が書いた CLAUDE.md があれば、差分を見せて聞く）
 8. 任意: 決まりが違う層のディレクトリ（バックエンド、テスト、フロントエンドなど）に、設計書のどの節を読むかだけを指す CLAUDE.md を置く（雛形は `templates/dir-CLAUDE.md`）。Claude Code は、そのディレクトリのファイルを読んだときにだけ読み込むので、その層を触るときにだけ決まりが入る
 
 Claude Code は app のルートで起動する。`headless-build.json` のパス（`docs/spec/**` など）は起動したディレクトリが基準だから。
