@@ -41,7 +41,7 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
     orchestrate から: /<スキル> <タスク名>（<モード>）
     このスキルの「オーケストレーターから呼ばれたとき」に従う。AskUserQuestion は使わず、聞くことは「## 質問」の形で返して止まる。
     （ac-review のとき）scripts/check.sh は背景に回さず前景で待つ（timeout 600000）。終わったらレビューの作成とコミットまで進めて止まらない。
-    （ship のとき）app PR と docs PR のタイトルと本文の全文を、要約せずにそのまま返す。
+    （ship のとき）app PR（docs の出し方が `PR` なら docs PR も）のタイトルと本文の全文を、要約せずにそのまま返す。
     （人の答えがあるときだけ）
     ## 人の答え
     - Q1: <問い> → <選ばれた答え。Other ならその文>（書く先: <ファイルと節>）
@@ -78,10 +78,14 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
 | 「画面の確認」に頭が `未確認` か `期待と違う` の行がある | ui-check（入る前に「app は上がっていますか（project.md の「app の起動と URL」）」を聞く） |
 | 最新のレビューが無い、または `head:` が `git rev-parse HEAD` と違う | ac-review |
 | 最新のレビューが `result: fail` | build（fix）。AC の疑いで S-n が付いていれば spec（差し戻し） |
-| 最新のレビューが `result: pass` で、docs に `ship/<タスク名>` ブランチが無い（`(cd docs && git branch --list ship/<タスク名>)` が空） | ship |
-| docs に `ship/<タスク名>` がある | 終わり（6）。ship の PR 番号は `ship/<タスク名>` 側の todo にあり、docs のベースブランチには無い |
+| 最新のレビューが `result: pass` で、まだ出していない（下の「出したかの見分け方」） | ship |
+| 出してある | 終わり（6） |
 
-読むのは、frontmatter の `status`・`scale`、docs のブランチの一覧、todo の `- [ ]` / `- [x]` の行と「画面の確認」の行の頭、レビューの 1〜2 行目と `head:`、build のログの「## build 停止」の節だけ。
+出したかの見分け方は、project.md の「docs の出し方」で分かれる（無い・`<ここに: …>` のままなら `PR`）:
+- `PR`: docs に `ship/<タスク名>` ブランチがあれば出してある（`(cd docs && git branch --list ship/<タスク名>)`）。ship の PR 番号は `ship/<タスク名>` 側の todo にあり、docs のベースブランチには無い
+- `直接 push`: todo の申し送りの ship の行に app の PR の番号があれば出してある。ship の行が「下書き」のままなら、ship が下書きで止まっている（ship を回す。ship の入口が聞いて止まる）
+
+読むのは、frontmatter の `status`・`scale`、project.md の「docs の出し方」、docs のブランチの一覧、todo の `- [ ]` / `- [x]` の行と「画面の確認」の行の頭と ship の行、レビューの 1〜2 行目と `head:`、build のログの「## build 停止」の節だけ。
 
 ### 2. 回す
 1 で決めたスキルを、「回し方」の表のとおりに動かす。返ってきた出力で分ける:
@@ -115,7 +119,7 @@ build は `claude -p` なので人に聞けない。止まったら、ログの�
 - 選択肢は「回し直す／ここで止める」などに限る。stash・破棄・force・push を選択肢にしない
 
 ### 6. 終わったら
-ship が終わったら、ship の出力（docs PR と app PR の URL、マージの順番）をそのまま出して止まる。
+ship が終わったら、ship の出力（app PR の URL、`PR` なら docs PR の URL とマージの順番、`直接 push` なら push した docs のハッシュ）をそのまま出して止まる。
 途中で止めたときは、どこまで回したか（スキルと結果の一覧）と、再開のコマンド `/orchestrate <タスク名>` を出して止まる。
 
 ## よくある言い訳

@@ -38,7 +38,7 @@ push と PR はしない。仕上げの `/ship` がやる。
 - spec が `status: approved`（中以上でも見る）で、todo.md の「spec への差し戻し」に `[ ]` の行が無い。
   あれば「spec の直しが先」と S-n を示し、「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）」と案内して止まる。spec が `draft` のときも同じ
 - `docs/accept/<タスク名>/accept.md` があるなら `status: approved`。`draft` なら「受け入れテストの承認を先に」と伝えて止まる。無ければそのまま始める（中身は読まない。status の行だけ見る）
-- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` は project.md の「PR の向き先」（app のベースブランチ）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。ship がそこから `ship/<タスク名>` を切る）
+- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` は project.md の「PR の向き先」（app のベースブランチ）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら ship がそこから `ship/<タスク名>` を切り、`直接 push` ならそのまま push する）
   - <branch> にいる: そのまま（並行作業で project.md の「並行作業」の始め方で入ったときもここ）
   - `<base>` にいて、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
     <branch> が手元か origin にあれば（`git branch --list <branch>`、`git branch -r --list origin/<branch>`）`git switch <branch>`、

@@ -1,14 +1,20 @@
 ---
 name: ship
-description: "ac-review が pass にしたブランチを外に出す。docs リポジトリで `ship/<タスク名>` ブランチを切って docs の更新・todo・review を入れて push → PR、app のブランチを push → PR（ui-check のスクショは project.md の方法で添付）まで。`/ship <タスク名>` で呼ぶ。最新のレビューが `result: pass` になったあと、「PR 出して」「ship して」「出荷して」「仕上げて」と言われたときに使う。PR の下書きを見せて止まり、「出して」と言われてから push する。コードは直さない（直すのは `/build fix`）。レビューが fail・未実施のもの、レビューのあとにコミットが増えたものには使わない。"
+description: "ac-review が pass にしたブランチを外に出す。docs の更新・todo・review を project.md の「docs の出し方」で出し（`PR` なら docs リポジトリで `ship/<タスク名>` ブランチを切って push → PR、`直接 push` なら docs のベースブランチにコミットして push）、app のブランチを push → PR（ui-check のスクショは project.md の方法で添付）まで。`/ship <タスク名>` で呼ぶ。最新のレビューが `result: pass` になったあと、「PR 出して」「ship して」「出荷して」「仕上げて」と言われたときに使う。PR の下書きを見せて止まり、「出して」と言われてから push する。コードは直さない（直すのは `/build fix`）。レビューが fail・未実施のもの、レビューのあとにコミットが増えたものには使わない。"
 ---
 
 # ship — pass になったものを、そのまま外に出す
 
 spec が「何を」、plan が「どう」、build が「作った」、ac-review が「そのとおりか」を見た。
-ship は、**ac-review が採点したものと同じ中身**を、docs と app の PR にして出す。コードは触らない。判断もしない。
+ship は、**ac-review が採点したものと同じ中身**を、app の PR と docs の更新にして出す。コードは触らない。判断もしない。
 PR の本文は spec・review・todo から写す。ship が自分で確かめたことのように書き足さない。
 push と PR は外から見える操作で、取り消しがききにくい。だから下書きを見せて一度止まり、人の「出して」を待つ。
+
+## docs の出し方
+`.claude/project.md` の「docs の出し方」で手順が分かれる。以下、片方だけの手順には【PR】【直接 push】と付ける。付いていない手順はどちらでも同じ。
+- 【PR】docs で `ship/<タスク名>` を切り、docs の PR を出す。ship の最中は docs がそのブランチにいるので、ほかのタスクの docs のコミットを同時に積まない
+- 【直接 push】docs はベースブランチから動かさない。ship のコミットもベースブランチに積み、そのまま push する。docs の PR は作らない。docs を複数の作業（worktree など）で共有していても、ほかのタスクのコミットと混ざらない
+- 「docs の出し方」が無い・`<ここに: …>` のままなら【PR】として扱う（この項目ができる前の PJ と同じ動き）
 
 ## 人が応答できない環境では使わない
 ヘッドレス（`claude -p`）では使わない。止まって人の「出して」を待つ段がある。
@@ -49,8 +55,10 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 - プロンプトに「## 人の答え」があれば、それを AskUserQuestion の答えとして扱う。書く先に書いてコミットしてから続ける
 - 「次は〜」の行は今までどおり出力の最後に書く（オーケストレーターがそれを読んで次を決める。「## 質問」を返すときは、その下に置く）
 - 入口・止まる条件・コミットの決まりは変えない。この会話はオーケストレーターとは別の会話なので、「この会話で build を回していない」などの入口はそのまま見る
-- 4（下書き）までは今までどおり進め、app PR と docs PR のタイトルと本文の全文を要約せずに出し、「出す／本文を直す／やめる」を「## 質問」で返して止まる
-- 「## 人の答え」が「出す」なら、0〜4 は済んでいる。入口の docs の 2 項目（docs のベースブランチにいる・`ship/<タスク名>` が無い）は見ず、代わりに docs が `ship/<タスク名>` にいて、まだ push していない（`(cd docs && git ls-remote --heads origin ship/<タスク名>)` が空）ことを確かめてから 5 を始める。下書きが手元に無ければ 4 の形で作り直してから 5 に入る（2 の docs のブランチと更新は済んでいるので、やり直さない）
+- 4（下書き）までは今までどおり進め、app PR（【PR】なら docs PR も）のタイトルと本文の全文を要約せずに出し、「出す／本文を直す／やめる」を「## 質問」で返して止まる
+- 「## 人の答え」が「出す」なら、0〜4 は済んでいる。入口の docs の項目は見ず、代わりに次を確かめてから 5 を始める。下書きが手元に無ければ 4 の形で作り直してから 5 に入る（2 の docs の更新は済んでいるので、やり直さない）
+  - 【PR】docs が `ship/<タスク名>` にいて、まだ push していない（`(cd docs && git ls-remote --heads origin ship/<タスク名>)` が空）
+  - 【直接 push】docs がベースブランチにいて、todo の申し送りの ship の行が「下書き」のまま（app の PR の番号がまだ無い）
 - 「本文を直す」なら、Other の内容で本文だけ直して、また「## 質問」で返す
 
 ## 進め方
@@ -67,9 +75,11 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 - レビューの「AC の照合」の ui-check の列に `未実施`（`未実施（再確認）`・`未実施（行が無い）` を含む）が無い。行が欠けた画面の AC は「画面の確認」を見ても分からないので、こちらで拾う。あれば `/ui-check <タスク名>` に戻して止まる（ac-review は行の欠落を参考にするだけなので、pass でもここに残りうる）
 - レビューの「検査」で `scripts/check.sh` が ALL GREEN。`scripts/accept.sh` は ALL GREEN か「なし」
 - `.claude/project.md` の「PR と課題管理」が埋まっている。`<ここに: …>` のままなら、どの項目が無いかを伝えて止まる
-- docs が docs のベースブランチ（project.md）にいる（`(cd docs && git branch --show-current)` で確かめる）。`ship/<別のタスク>` などにいるなら、前の ship の残り。そこから切ると前のタスクまで PR に入るので、聞いて止まる
-- docs に `ship/<タスク名>` ブランチがまだ無い（`(cd docs && git branch --list ship/<タスク名>)` と `(cd docs && git ls-remote --heads origin ship/<タスク名>)` がどちらも空。remote も docs のサブシェルで見る。app の cwd で打つと app の origin を見てしまう）。
+- docs が docs のベースブランチ（project.md）にいる（`(cd docs && git branch --show-current)` で確かめる）。`ship/<別のタスク>` などにいるなら、前の ship の残り。【PR】そこから切ると前のタスクまで PR に入る。【直接 push】そこにコミットすると push 先がずれる。どちらも聞いて止まる
+- 【PR】docs に `ship/<タスク名>` ブランチがまだ無い（`(cd docs && git branch --list ship/<タスク名>)` と `(cd docs && git ls-remote --heads origin ship/<タスク名>)` がどちらも空。remote も docs のサブシェルで見る。app の cwd で打つと app の origin を見てしまう）。
   あれば前の ship の残り。どうするか聞いて止まる
+- 【直接 push】todo の申し送りに ship の行がまだ無い。あれば前の ship の残り（「下書き」のままなら 4 で止まったもの）。どうするか聞いて止まる
+- 【直接 push】project.md の「docs のファイルの URL」が埋まっている。PR の本文のリンクに使う
 
 ### 1. 読む（この順で）
 1. spec: 目的、AC、スコープ外、影響範囲（特に「docs:」）、「完了の見た目」
@@ -79,14 +89,18 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 5. スクショの置き場の `<タスク名>/` のファイル一覧（置き場と開き方は project.md の「スクショ」）
 6. `git log --oneline <レビューの base>..HEAD`
 
-### 2. docs のブランチを切って、更新する
-docs の手元のベースブランチ（build の todo と ac-review のレビューのコミットが乗っている）を起点に切る。今いるブランチに頼らず、起点を書く:
+### 2. docs を更新する
+【PR】docs の手元のベースブランチ（build の todo と ac-review のレビューのコミットが乗っている）を起点に切る。今いるブランチに頼らず、起点を書く:
 
     (cd docs && git switch -c ship/<タスク名> <docs-base>)
 
+【直接 push】ブランチは切らない。docs のベースブランチのまま更新してコミットする。
+
 更新するもの:
 - spec の影響範囲「docs:」に書かれた文書。書かれたことだけを直す。「docs: なし」なら触らない
-- todo.md: `P-n 仕上げ` にチェックを付け、申し送りに `| 日付 | ship | 人のレビュー → マージ | docs PR / app PR は下書き |` の行を足す（PR の番号は 5 で書き換える）
+- todo.md: `P-n 仕上げ` にチェックを付け、申し送りに ship の行を足す（PR の番号は 5 で書き換える）
+  - 【PR】`| 日付 | ship | 人のレビュー → マージ | docs PR / app PR は下書き |`
+  - 【直接 push】`| 日付 | ship | 人のレビュー → マージ | app PR は下書き |`
 - spec と plan は書き換えない（`status: approved` のまま。`grep '^status: approved'` で拾う約束を崩さない）
 
 更新したファイルだけを add してコミットする:
@@ -103,8 +117,10 @@ docs の手元のベースブランチ（build の todo と ac-review のレビ�
 全部は付けない。古い連番（直す前の NG）は付けない。0 枚なら「添付なし」と書く。
 
 ### 4. PR の下書きを見せて、止まる
-docs の PR と app の PR、両方の本文を「出力テンプレート」の形で書いて見せる。あわせて次を出す:
-- push するもの: docs の `ship/<タスク名>`（コミット数）、app の `<branch>`（コミット数。`git log --oneline origin/<base>..HEAD`）
+app の PR（【PR】なら docs の PR も）の本文を「出力テンプレート」の形で書いて見せる。あわせて次を出す:
+- push するもの: app の `<branch>`（コミット数。`git log --oneline origin/<base>..HEAD`）と、docs の
+  - 【PR】`ship/<タスク名>`（コミット数）
+  - 【直接 push】`<docs-base>`（`(cd docs && git log --oneline origin/<docs-base>..HEAD)` のコミット数。ほかのタスクの未 push のコミットも一緒に出るので、その数も分けて書く）
 - 添付するスクショのファイル名と、どの AC か
 - レビューの「人が確かめること」（PR のレビューで見てもらうこと）
 
@@ -117,10 +133,19 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 途中で失敗したら、そこで止まり、どこまで済んだかを出す。済んだものはやり直さない。
 コマンドは project.md の「PR と課題管理」のもの。以下の `<docs-base>` は project.md の「docs のベースブランチ」、`<base>` は「PR の向き先」。
 
-1. docs を push して、docs の PR を作る（base は `<docs-base>`）
+1. docs を出す
+   - 【PR】push して、docs の PR を作る（base は `<docs-base>`）
 
-       (cd docs && git push -u origin ship/<タスク名>)
-       (cd docs && <project.md の「docs の PR を作るコマンド」>)
+         (cd docs && git push -u origin ship/<タスク名>)
+         (cd docs && <project.md の「docs の PR を作るコマンド」>)
+
+   - 【直接 push】ベースブランチを push する
+
+         (cd docs && git push origin <docs-base>)
+
+     remote が先に進んでいて断られたら（ほかの作業が先に push した）、`(cd docs && git pull --rebase origin <docs-base>)` で取り込んでからもう一度 push する。
+     docs の作業ツリーにほかのタスクの書きかけがあって pull できないときは、stash せずに止まって出す（書きかけはそのタスクのもの）。
+     push できたら、ship のコミットのハッシュ（`(cd docs && git rev-parse HEAD)`）を控える。`pull --rebase` するとハッシュが下書きのときと変わるので、この節の 4 で作る app の PR のリンクは、下書きのハッシュではなくこのハッシュで作る
 
 2. app を push する
 
@@ -129,42 +154,59 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 3. スクショを付ける用意をする。project.md の「スクショを PR に付ける方法」がコマンドなら、その手順で上げる（戻りの ID などを控える）。
    「本文にファイル名を書き、人が手で添付する」なら、ここでは何もしない（6 で人に頼む）。
    認証情報は project.md の「認証情報の扱い」のとおりに使い、画面やログに出さない
-4. app の PR を作る（base は `<base>`）。本文の「docs PR」に 1 の PR を書く。3 で上げたものがあれば、その方法で付ける
+4. app の PR を作る（base は `<base>`）。【PR】本文の「docs PR」に 1 の PR を書く。【直接 push】本文の spec・plan・review のリンクを、1 で控えたハッシュと project.md の「docs のファイルの URL」で作る。3 で上げたものがあれば、その方法で付ける
 
        <project.md の「PR を作るコマンド」>
 
 5. 付いたかを確かめる。project.md の「付いたかの確かめ方」で、件数が 3 で選んだ枚数と一致する。確かめ方が「なし」なら、付けたファイル名を 6 で出す
-6. todo.md の申し送りの ship の行に、2 つの PR の番号を書いて docs でコミットし、`ship/<タスク名>` に push する
+6. todo.md の申し送りの ship の行に PR の番号（【PR】docs と app の 2 つ、【直接 push】app の 1 つ）を書いて docs でコミットし、push する
 
        (cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): ship <タスク名> PR 番号" && git push)
 
-7. docs と app をベースブランチに戻す（次のタスクの spec が `ship/<タスク名>` にコミットしないように。次の build は `<base>` から新しいブランチを切る）
+   【PR】push 先は `ship/<タスク名>`。【直接 push】push 先は `<docs-base>`。断られたら 1 と同じく `pull --rebase` してからもう一度 push する
 
-       (cd docs && git switch <docs-base>)
-       git switch <base>
+7. ベースブランチに戻す（次の build は `<base>` から新しいブランチを切る）
+   - 【PR】docs も戻す（次のタスクの spec が `ship/<タスク名>` にコミットしないように）
 
-   app は本体のときだけ戻す。worktree（`git rev-parse --git-dir` と `git rev-parse --git-common-dir` が違う）なら app はそのまま（`<base>` は本体で使われていて入れない。project.md の「並行作業」の終わり方で片づく）。docs は worktree でも戻す。
-   どちらも push のあとなので、作業ツリーは空のはず。空でなければ戻さずに止まって出す
+         (cd docs && git switch <docs-base>)
+
+   - 【直接 push】docs はベースブランチのままなので何もしない
+   - app
+
+         git switch <base>
+
+   app は本体のときだけ戻す。worktree（`git rev-parse --git-dir` と `git rev-parse --git-common-dir` が違う）なら app はそのまま（`<base>` は本体で使われていて入れない。project.md の「並行作業」の終わり方で片づく）。【PR】docs は worktree でも戻す。
+   push のあとなので、app の作業ツリーと（【PR】の）docs の作業ツリーは空のはず。空でなければ戻さずに止まって出す
 
 ### 6. 終わったら
 次の形で出して止まる:
+
+【PR】
 
     docs PR: <URL>
     app PR: <URL>（添付 <k> 枚 | 手で添付してほしいもの: <ファイル名の一覧>）
     次: 人のレビュー → マージ。docs の PR を先にマージする
     マージ後: 本体の docs と app で `git pull`（どちらも 7 でベースブランチに戻してある）。スクショの置き場の `<タスク名>/` は消してよい。worktree なら docs の PR がマージされてから、project.md の「並行作業」の終わり方で閉じる
 
+【直接 push】
+
+    docs: <docs-base> に push 済み（<ハッシュ>）
+    app PR: <URL>（添付 <k> 枚 | 手で添付してほしいもの: <ファイル名の一覧>）
+    次: 人のレビュー → マージ
+    マージ後: 本体の app で `git pull`。スクショの置き場の `<タスク名>/` は消してよい。worktree なら project.md の「並行作業」の終わり方で閉じる
+
 ## 書き方
 
 ### ブランチとタイトル
-- docs のブランチは `ship/<タスク名>`。`plan/<タスク名>`（計画書の PR で使ったもの）と分ける
-- PR のタイトルは spec のタイトル。app は `<type>(<略号>): <spec のタイトル>`、docs は `docs(<略号>): <spec のタイトル>`
+- 【PR】docs のブランチは `ship/<タスク名>`。`plan/<タスク名>`（計画書の PR で使ったもの）と分ける
+- 【直接 push】docs のブランチは切らない。`<docs-base>` だけを使う
+- PR のタイトルは spec のタイトル。app は `<type>(<略号>): <spec のタイトル>`、【PR】docs は `docs(<略号>): <spec のタイトル>`
 
 ### 写すだけにするもの
 | PR の欄 | 出典 |
 |---|---|
 | 何をしたか | spec の目的 |
-| 根拠のリンク | docs の PR のブランチ上のファイル。`docs/` は app の git 管理外なので、ローカルのパスを書いても PR の読者は開けない |
+| 根拠のリンク | 【PR】docs の PR のブランチ上のファイル。【直接 push】push した ship のコミットのハッシュで開くファイル（project.md の「docs のファイルの URL」。ベースブランチは先に進むので、ブランチ名のリンクにしない）。どちらも、`docs/` は app の git 管理外なので、ローカルのパスを書いても PR の読者は開けない |
 | AC の対応 | レビューの「AC の照合」（テスト・ui-check の列） |
 | 検査 | レビューの「検査」 |
 | 見てほしいこと | レビューの参考「人が確かめること」 |
@@ -181,7 +223,7 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 <spec の目的を 1〜2 行>
 
 ## 根拠
-- docs PR: <URL>（spec・plan・review はこの PR の `ship/<タスク名>` ブランチで開ける）
+- docs PR: <URL>（spec・plan・review はこの PR の `ship/<タスク名>` ブランチで開ける。【直接 push】ではこの行を書かない）
 - spec: <docs リポジトリ上の spec/<タスク名>-spec.md の URL>（approved）
 - plan: <docs リポジトリ上の plan/<タスク名>-plan.md の URL>（approved。小なら「なし」）
 - review: <docs リポジトリ上の review/<タスク名>-review-<n>.md の URL>（pass。head <ハッシュ>）
@@ -206,7 +248,7 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 - <spec のスコープ外>
 ```
 
-### docs の PR
+### docs の PR（【PR】のときだけ）
 ```markdown
 ## 何を入れるか
 - spec / plan: <タスク名>（approved。この PR では変えていない）
@@ -232,7 +274,9 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 - 人の「出して」の前に push した、スクショを上げた、PR を作った
 - レビューの `head:` と HEAD が違うのに進めた
 - コードやテストを書き換えた。spec・plan を書き換えた（status を変えたのも含む）
-- docs のベースブランチに直接コミットした。`ship/<タスク名>` 以外に push した
+- 【PR】docs のベースブランチに直接コミットした。`ship/<タスク名>` 以外に push した
+- 【直接 push】docs でブランチを切った・切り替えた。`<docs-base>` 以外に push した。pull できないからと stash した
+- 【直接 push】app の PR のリンクを、ブランチ名や下書きのときのハッシュで書いた
 - `git add -A` / `.`、`-C docs` を使った。force push を別の書き方で回避した
 - スクショを上げたのに、そのターンで PR に付けなかった。付いたかを確かめなかった
 - 認証情報（トークン、API キー）を画面やログに出した
@@ -244,13 +288,14 @@ docs の PR と app の PR、両方の本文を「出力テンプレート」の
 
 ## 確認項目（下書きを見せる前に）
 - 最新のレビューが pass で、`head:` が HEAD と一致しているか
-- app と docs の作業ツリーが空で、docs は `ship/<タスク名>` にいるか
+- app と docs の作業ツリーが空で、docs は【PR】`ship/<タスク名>`【直接 push】`<docs-base>` にいるか
 - docs のコミットに入れたのが、spec の「docs:」の文書と todo だけか。spec・plan を変えていないか
 - app の PR 本文の各欄に出典（spec・review・todo）があるか。spec・plan・review がローカルのパスではなく docs リポジトリ上のリンクか。「AC の対応」にすべての AC が 1 行ずつあるか
 - 添付するスクショが「完了の見た目」の OK と再確認の OK だけで、各ファイルがスクショの置き場の `<タスク名>/` にあるか
 - 「見てほしいこと」にレビューの「人が確かめること」を落とさず写したか
 
 ## 確認項目（出したあと）
-- docs と app の PR が 1 つずつできていて、app の本文に docs の PR が、todo に両方の番号があるか
+- 【PR】docs と app の PR が 1 つずつできていて、app の本文に docs の PR が、todo に両方の番号があるか
+- 【直接 push】app の PR が 1 つできていて、`(cd docs && git log --oneline origin/<docs-base>..HEAD)` が空（push しきった）で、todo に app の PR の番号があるか。app の本文のリンクが push したハッシュで開けるか
 - app の PR の添付の件数が、選んだ枚数と一致しているか
-- 最後の出力に「次」（docs を先にマージ、マージ後の後片付け）があるか
+- 最後の出力に「次」（【PR】docs を先にマージ、マージ後の後片付け）があるか
