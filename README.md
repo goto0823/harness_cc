@@ -27,6 +27,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/ui-check` | 動いている app を Playwright で開いて、画面の AC を確かめ、スクショを残す | 新しいセッション |
 | `/ac-review` | spec と plan に照らして採点し、`docs/review/` に書く。受け入れテストもここで回す | **build と別のモデル** |
 | `/ship` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
+| `/orchestrate` | spec から ship までを、各スキルの新しい会話で順に回す。人は質問に答えるだけ（§8） | 人と対話（人が打ったときだけ） |
 
 規模で入口が変わる（`templates/CLAUDE.md` の「規模と進め方」）。
 - 軽微（typo・文言・lint）はスキルを通さず直す。既存のテストで再現できるバグは `/debug`
@@ -243,7 +244,7 @@ README.md                  この説明
 install.sh                 app に入れる・更新する
 settings.json              いつでも禁止（app の .claude/settings.json へ）
 headless-build.json        build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
-skills/                    9 つのスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
+skills/                    10 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
 scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
 scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
 templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）
@@ -255,3 +256,29 @@ examples/                  PJ の見本（今は laravel-vue）
 ```
 
 スキルの中の例（会議室予約の app、`AC-RCR-2` など）は、説明のための架空のもの。
+
+## 8. オーケストレーション（`/orchestrate`）
+`/orchestrate <タスク名>` で、spec から ship までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
+- spec・plan・debug・ship はサブエージェント（作る側のモデル）、accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
+- build と build fix は `claude -p "/build auto <タスク名>" --settings .claude/headless-build.json --model <作る側>` で回す。§3 の deny は `--settings` で読ませたときだけ効き、サブエージェントには効かないため
+- サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。オーケストレーターが AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
+- 状態は全部ファイルにあるので、止まっても `/orchestrate <タスク名>` で続きから再開できる
+- build のログは app のルート直下の `local/orchestrate/<タスク名>/build-<n>.log`（git 管理外。`.gitignore` に `/local/` を入れる）
+- 人が打ったときだけ動く（`disable-model-invocation: true`）
+
+### 実際に回して分かったこと（cc_harness で 2026-11-09 に 5 本通したとき）
+- ac-review のサブエージェントが、背景で回した `scripts/check.sh` の終わりで止まったまま起きないことがある。プロンプトで「前景で待つ（timeout 600000）。レビューの作成とコミットまで進めて止まらない」と指示する（orchestrate に組み込み済み）
+- ship のサブエージェントが PR の下書きを要約だけで返すことがある。「全文をそのまま返す」と指示する（組み込み済み）
+- ship の「出す」は、同じ ship のエージェントに SendMessage で渡すと、承認した本文がそのまま使われる（組み込み済み）
+- build が S-n（spec のこと）で止まったら、人の答えを todo に書いてコミットしてから spec の差し戻しへ。差し戻しは fix の周回に数えない
+- サンドボックスでは書ける場所が限られ、build のログを置けないことがある。書ける場所を先に確かめる
+- 所要時間の目安: build は 1 本 15〜25 分、ac-review は 10 分前後
+
+### 初回に確かめること
+1. `claude -p` の中で `/build auto` がスキルとして呼べるか（呼べなければ「build スキルで auto <タスク名> を進めて」と書く）
+2. ヘッドレスの build が、編集・`scripts/check.sh`・`git add` / `git commit` を確認なしで通せるか（`settings.local.json` の allow か `--permission-mode` が要るか）
+3. Agent ツールの `model` に審判側のモデルを渡せるか。審判側のサブエージェントから Playwright の MCP が使えるか
+4. `disable-model-invocation: true` で、Claude が自分から `/orchestrate` を呼ばないか
+
+cc_harness（iba）では 1〜3 は動いた（2026-11-09）。PJ ごとに一度確かめる。
+
