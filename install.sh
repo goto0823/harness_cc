@@ -99,7 +99,7 @@ else
   echo "  手で足す:   CLAUDE.md に harness_cc/templates/CLAUDE.md の 2 節"
   notes+=("CLAUDE.md に「規模と進め方」と「3 段階」を足す")
 fi
-for pat in "/docs/" "/tests/Acceptance/" ".playwright-mcp/"; do
+for pat in "/docs/" "/tests/Acceptance/" ".playwright-mcp/" "/local/"; do
   if [ -e "$app/.gitignore" ] && grep -qxF "$pat" "$app/.gitignore"; then
     echo "  そのまま:   .gitignore に $pat"
   else
