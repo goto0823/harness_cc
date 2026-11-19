@@ -261,7 +261,7 @@ examples/                  PJ の見本（今は laravel-vue）
 `/orchestrate <タスク名>` で、spec から ship までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
 - spec・plan・debug・ship はサブエージェント（作る側のモデル）、accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
 - build と build fix は `claude -p "/build auto <タスク名>" --settings .claude/headless-build.json --model <作る側>` で回す。§3 の deny は `--settings` で読ませたときだけ効き、サブエージェントには効かないため
-- サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。オーケストレーターが AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
+- サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。「## 質問」には、問いのほかに、答えを書く下書きのパスと、問いの材料にした前提の表（内容と根拠の `file:line`）を付ける。オーケストレーターはその表をそのまま画面に出してから AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
 - 状態は全部ファイルにあるので、止まっても `/orchestrate <タスク名>` で続きから再開できる
 - build のログは app のルート直下の `local/orchestrate/<タスク名>/build-<n>.log`（git 管理外。`.gitignore` に `/local/` を入れる）
 - 人が打ったときだけ動く（`disable-model-invocation: true`）
