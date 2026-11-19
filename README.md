@@ -210,13 +210,14 @@ docs/
 
 - **git 操作の書き方。** スキル内の docs の git 操作は `(cd docs && git add <path> && git commit -m "...")` の形で書く。
   `-C docs` を付けた git は deny のパターン（`Bash(git add -A*)` など）に一致しないため使わない。deny はサブシェルや `cd docs && ...` の中にも効く（公式ドキュメントで確認）
-- **ブランチ。** build の todo と ac-review のレビューは、手元の docs のベースブランチに積む。`/ship` が `ship/<タスク名>` を切って PR にする。docs の remote のベースブランチに直接 push はしない
+- **ブランチ。** build の todo と ac-review のレビューは、手元の docs のベースブランチに積む。出し方は project.md の「docs の出し方」で選ぶ。`PR` なら `/ship` が `ship/<タスク名>` を切って PR にし、docs の remote のベースブランチに直接 push はしない。`直接 push` なら `/ship` がブランチを切らずにベースブランチを push し、docs の PR は作らない
 - **スクショ。** docs には入れない。project.md の「スクショ」の置き場（git 管理外）に置き、PR に要るものは `/ship` が project.md の方法で付ける
 - **受け入れテスト。** `docs/accept/<タスク名>/`。app の履歴には入れない。採点のときだけ `scripts/accept.sh` が app にコピーして回す
 
 ### PJ で決めておくこと
-- **worktree で並行作業するとき、docs をどう見せるか。** worktree ごとに docs をコピーするなら、そこで積んだコミットは自動では本体に届かない。`/ship` の docs の PR で戻す形にすると、worktree を消す前に回収できる。project.md の「並行作業」に書く
-- **docs の PR のマージのしかた。** squash マージにすると、手元の docs のベースブランチに積んだ todo・review のコミットと、remote のコミットが別物になって分かれる。普通のマージなら `git pull` でそろう
+- **docs の出し方（`PR` か `直接 push`）。** docs もレビューするなら `PR`。docs をレビューしない、または worktree で docs を共有して並行作業するなら `直接 push`（`PR` だと ship が docs のブランチを切り替えている間に、ほかのタスクのコミットがその PR に混ざる）。`直接 push` のときは、PR の本文のリンクに使う「docs のファイルの URL」も決める
+- **worktree で並行作業するとき、docs をどう見せるか。** worktree ごとに docs をコピーするなら、そこで積んだコミットは自動では本体に届かない。`/ship` の docs の PR で戻す形にすると、worktree を消す前に回収できる。本体の docs へのシンボリックリンクで共有するなら、回収は要らないが、「docs の出し方」は `直接 push` にする。project.md の「並行作業」に書く
+- **docs の PR のマージのしかた（`PR` のとき）。** squash マージにすると、手元の docs のベースブランチに積んだ todo・review のコミットと、remote のコミットが別物になって分かれる。普通のマージなら `git pull` でそろう
 
 ## 6. Playwright の MCP（ui-check 用）
 

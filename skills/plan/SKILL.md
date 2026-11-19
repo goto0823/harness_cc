@@ -197,7 +197,7 @@ spec に無い技術の約束をここで決める。新しい URL・ルート�
 - 確認:
 
 ### P-n: 仕上げ
-- `scripts/check.sh`（全体）→ `/ui-check`（画面に関わる AC と申し送り「画面の確認」の「未確認」を実機で確かめ、スクショを project.md の「スクショ」の置き場に残す。画面に関わる AC が無ければ飛ばす）→ `/ac-review`（spec の AC と ui-check の結果に照らす）→ `/ship`（spec の影響範囲「docs:」を更新して docs の PR、app の PR。spec と plan へのリンク。ui-check のスクショは project.md の「PR と課題管理」の方法で付ける）
+- `scripts/check.sh`（全体）→ `/ui-check`（画面に関わる AC と申し送り「画面の確認」の「未確認」を実機で確かめ、スクショを project.md の「スクショ」の置き場に残す。画面に関わる AC が無ければ飛ばす）→ `/ac-review`（spec の AC と ui-check の結果に照らす）→ `/ship`（spec の影響範囲「docs:」を更新して docs を出し（project.md の「docs の出し方」で PR か直接 push）、app の PR。spec と plan へのリンク。ui-check のスクショは project.md の「PR と課題管理」の方法で付ける）
 
 ## 確認方法
 - コマンド: `scripts/check.sh`（追加で見るものがあれば書く）
