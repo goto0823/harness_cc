@@ -10,6 +10,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 
 ```
 /arch（最初に 1 回。設計の規約を変えるとき）
+/pm plan（大きい要望をタスクに分けるとき）　/pm status（進み具合を見る・Backlog に反映するとき。いつでも）
 
 /spec → /plan → /accept-test → /build → /ui-check → /ac-review → /deliver
                                    ↓ 壊れたら
@@ -27,6 +28,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/ui-check` | 動いている app を Playwright で開いて、画面の AC を確かめ、スクショを残す | 新しいセッション |
 | `/ac-review` | spec と plan に照らして採点し、`docs/review/` に書く。受け入れテストもここで回す | **build と別のモデル** |
 | `/deliver` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
+| `/pm` | 要望をタスク（spec 1 本ずつ）に分けて並べ、Backlog にマイルストーンと親課題を作る（`/pm plan`）。docs から進み具合をまとめ、todo の作業ステップを子課題にして Backlog に反映する（`/pm status`） | 人と対話 |
 | `/orchestrate` | spec から deliver までを、各スキルの新しい会話で順に回す。人は質問に答えるだけ（§8） | 人と対話（人が打ったときだけ） |
 
 規模で入口が変わる（`templates/CLAUDE.md` の「規模と進め方」）。
@@ -102,6 +104,7 @@ deny は allow より先に評価されるので、`settings.local.json` の all
 - `git commit -a` / `-am` / `--all` / `--amend`（後ろに来る形も。メッセージ中の `" -a"` で止まるのは許容）
 - `git rebase`、`git stash`、`git push`（全部）
 - PR の作成: `gh pr create`
+- Backlog の操作: `bee`（全部。Backlog に書くのは対話の `/pm` だけ）
 - spec と plan の書き換え: `Edit(docs/spec/**)`、`Edit(docs/plan/*-plan.md)`。todo.md は build が更新するので止めない
 - 受け入れテストの読み書きと実行: `Read(docs/accept/**)`、`Edit(docs/accept/**)`、`Read(tests/Acceptance/**)`、`Edit(tests/Acceptance/**)`、`scripts/accept.sh`（4 つの呼び方）
 
@@ -206,6 +209,7 @@ docs/
   accept/<タスク名>/accept.md と受け入れテスト
   review/<タスク名>-review-<n>.md
   debug/<YYYY-MM-DD>-<短い名前>.md
+  pm/<要望名>.md（/pm。タスクの一覧と、Backlog の課題キー）
 ```
 
 - **git 操作の書き方。** スキル内の docs の git 操作は `(cd docs && git add <path> && git commit -m "...")` の形で書く。
@@ -246,7 +250,7 @@ README.md                  この説明
 install.sh                 app に入れる・更新する
 settings.json              いつでも禁止（app の .claude/settings.json へ）
 headless-build.json        build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
-skills/                    10 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
+skills/                    11 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
 scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
 scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
 templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）

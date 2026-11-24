@@ -108,6 +108,15 @@ else
   echo "  手で足す:   CLAUDE.md に harness_cc/templates/CLAUDE.md の 2 節"
   notes+=("CLAUDE.md に「規模と進め方」と「3 段階」を足す")
 fi
+# PJ が持つファイルは上書きしないので、あとから足した項目は手で足してもらう
+if [ -e "$app/.claude/project.md" ] && ! grep -q '^## 課題管理（Backlog）' "$app/.claude/project.md"; then
+  echo "  手で足す:   .claude/project.md に「## 課題管理（Backlog）」の節"
+  notes+=(".claude/project.md に harness_cc/templates/project.md の「## 課題管理（Backlog）」の節を足す（/pm を使わないなら中身は「なし」）")
+fi
+if [ -e "$app/.claude/headless-build.json" ] && ! grep -qF '"Bash(bee *)"' "$app/.claude/headless-build.json"; then
+  echo "  手で足す:   .claude/headless-build.json の deny に \"Bash(bee)\" と \"Bash(bee *)\""
+  notes+=(".claude/headless-build.json の permissions.deny に \"Bash(bee)\" と \"Bash(bee *)\" を足す（ヘッドレスの build が Backlog に触らないように）")
+fi
 for pat in "/docs/" "/tests/Acceptance/" ".playwright-mcp/" "/local/"; do
   if [ -e "$app/.gitignore" ] && grep -qxF "$pat" "$app/.gitignore"; then
     echo "  そのまま:   .gitignore に $pat"
