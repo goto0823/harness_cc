@@ -74,10 +74,14 @@ ui-check が撮り、ac-review と deliver が使う。
 - app のセッションから開くとき: <ここに: 例 `../local/screenshots/...`>
 
 ## 並行作業
-worktree などで、同時に 2 つ以上のタスクを進めるとき。
-- 始め方: <ここに: 例 `git worktree add ../<branch> -b <branch>`。並行作業しないなら「なし」>
-- 終わり方: <ここに>
-- worktree の中の docs: <ここに: worktree で docs がどう見えるか（コピーか、本体の docs へのシンボリックリンクで共有か）、積んだコミットを本体の docs にどう戻すか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）>
+worktree で、同時に 2 つ以上のタスクを進めるとき（`/pm run` もこれを使う）。並行作業しないなら、全部「なし」と書く。
+- 置き場: <ここに: 例 app の 1 つ上の `wt/`。worktree は `<置き場>/<タスク名>` に作る>
+- 始め方: <ここに: 例 `git fetch origin && git worktree add --detach <置き場>/<タスク名> origin/<PR の向き先>` → `ln -s "$(pwd)/docs" <置き場>/<タスク名>/docs` → `cp .env <置き場>/<タスク名>/`。ブランチは切らない（`--detach`）。build が入口で spec の `base:` から切る>
+- 終わり方: <ここに: 例 PR がマージされたら `git worktree remove <置き場>/<タスク名>`。消す前に、その worktree の app を止める>
+- worktree の中の docs: <ここに: 本体の docs へのシンボリックリンクで共有する（推奨）か、コピーか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）。各スキルは docs の自分のタスクのファイルだけを見て、`git commit -- <パス>` で自分のファイルだけをコミットする>
+- worktree ごとに分けるもの: <ここに: 例 テストの DB 名（`.claude/harness.env` の `harness_env` で、worktree のディレクトリ名から `app_test_<タスク名>` を作る）、app のポート、`.env` の値。分けないと、同時に回る build のテストが互いのデータを消して、コードが正しくても落ちる>
+- 同時に回すタスクの数: <ここに: 例 `2`。テストの DB とポートを分けられないなら `1`（spec・plan・受け入れテストだけ並べたいときも `1` にして、人が別の会話で回す）>
+- 子の cc の起動（`/pm run` が使う）: <ここに: 例 `claude -p "<プロンプト>" --model opus --permission-mode acceptEdits --output-format json`。`-p` では確認のダイアログが出せず、許していない操作は断られる。子が使うもの（編集、`scripts/check.sh`、docs と app の `git add` / `git commit`、`claude -p`（build）、`git push`（deliver））を `--permission-mode` か `.claude/settings.local.json` の allow で通す>
 
 ## PR と課題管理
 - PR を作るコマンド: <ここに: 例 `gh pr create --base <ベース> --head <branch> --title "<タイトル>" --body-file <本文のファイル>`>

@@ -272,6 +272,16 @@ examples/                  PJ の見本（今は laravel-vue）
 - build のログは app のルート直下の `local/orchestrate/<タスク名>/build-<n>.log`（git 管理外。`.gitignore` に `/local/` を入れる）
 - 人が打ったときだけ動く（`disable-model-invocation: true`）
 
+### 並べて回す（`/pm run <要望名>`）
+`/pm plan` で分けたタスクを、worktree ごとに子の cc で並べて回す。人は `/pm run` の会話で、全部のタスクの質問に答える。
+- pm（本体の会話）がタスクごとに worktree を作り（project.md の「並行作業」の「始め方」。`--detach` でブランチは切らない）、その中で `claude -p "/orchestrate worker <タスク名>" --output-format json` をバックグラウンドで起動する。数は「同時に回すタスクの数」まで
+- 子は人に聞くことが出たら、出力の最後に「## pm へ: 質問」を書いてターンを終える（`claude -p` が終わる）。pm は終わりの通知で起き、前提の表をそのまま出して AskUserQuestion で聞き、`claude -p --resume <session_id>` で答えを子に返す。子が質問を持って帰ってくる形なので、待っている間に質問が消えない（別の会話にメッセージを送る機能は、受け取り側の設定が要り、ほかの会話からのメッセージは同意として扱われない）
+- `claude -p` は、裏で回したコマンド（build）が終わるまで待ってから終わる（公式ドキュメント）。子の中の build も、今までどおり `claude -p --settings .claude/headless-build.json` で回る
+- 依存（pm の表の「依存」）があるタスクも、spec・plan・受け入れテストは並べて進める。build の前で止まり、依存先の PR が base にマージされたと人が答えたら続ける。ブランチはどれも build が `origin/<base>` から切る（依存先のブランチの上には積まない）
+- docs は本体の docs をシンボリックリンクで共有し、「docs の出し方」は `直接 push` にする。各スキルは docs の自分のタスクのファイルだけを見て、`git commit -m "..." -- <パス>` で自分のファイルだけをコミットする（`--` の後ろにパスを書くと、git はそのパスだけをコミットするので、ほかのタスクがステージに置いたものが混ざらない）
+- テストの DB とポートは worktree ごとに分ける（project.md の「worktree ごとに分けるもの」）。分けないと、同時に回る build のテストが互いのデータを消す。分けられない PJ は「同時に回すタスクの数」を `1` にする
+- 回している状態（子の session_id など）は `local/pm/<要望名>/state.md`（git 管理外）。pm の会話を閉じても `/pm run <要望名>` で続きから
+
 ### 実際に回して分かったこと（cc_harness で 2026-11-09 に 5 本通したとき）
 - ac-review のサブエージェントが、背景で回した `scripts/check.sh` の終わりで止まったまま起きないことがある。プロンプトで「前景で待つ（timeout 600000）。レビューの作成とコミットまで進めて止まらない」と指示する（orchestrate に組み込み済み）
 - deliver のサブエージェントが PR の下書きを要約だけで返すことがある。「全文をそのまま返す」と指示する（組み込み済み）
@@ -285,6 +295,9 @@ examples/                  PJ の見本（今は laravel-vue）
 2. ヘッドレスの build が、編集・`scripts/check.sh`・`git add` / `git commit` を確認なしで通せるか（`settings.local.json` の allow か `--permission-mode` が要るか）
 3. Agent ツールの `model` に審判側のモデルを渡せるか。審判側のサブエージェントから Playwright の MCP が使えるか
 4. `disable-model-invocation: true` で、Claude が自分から `/orchestrate` を呼ばないか
+5. （`/pm run` を使うなら）`claude -p "/orchestrate worker <タスク名>"` で orchestrate が呼べるか（`disable-model-invocation: true` のスキルを `-p` のプロンプトの頭で呼べるかは、公式ドキュメントに書いていない）
+6. 子の `claude -p` が、project.md の「子の cc の起動」の権限で、編集・`scripts/check.sh`・`git commit`・`claude -p`（build）・`git push` を確認なしで通せるか（`-p` では確認のダイアログが出せず、許していない操作は断られる）
+7. `claude -p --resume <session_id>` を worktree の中で打って、子の会話の続きになるか。続いた会話で、deliver のサブエージェントに SendMessage が届くか（届かなければ、子は下書きを作り直してもう一度聞く）
 
 cc_harness（iba）では 1〜3 は動いた（2026-11-09）。PJ ごとに一度確かめる。
 

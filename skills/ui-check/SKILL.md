@@ -103,7 +103,7 @@ todo.md の申し送り「画面の確認」で、確かめた AC の行（plan 
 todo を docs リポジトリでコミットする（docs の git 操作はサブシェルの形。`-C docs` は使わない）。スクショはコミットしない（置き場は git 管理外）。
 cwd が worktree なら `docs` は worktree 側の docs を指す。本体の docs に cd しない。
 
-    (cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): ui-check <範囲>")
+    (cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): ui-check <範囲>" -- plan/<タスク名>-todo.md)
 
 「人が確かめること」（見た目・余白・seed に無くて確かめられなかった AC）があれば、コミットの前に 1 件 1 問で AskUserQuestion で聞く。
 問いにはスクショのパスを書き、「OK／NG」で聞く（NG なら Other に何がおかしいか）。答えは申し送りの ui-check の行と、報告の「人が確かめること」に「OK」か「NG: <内容>」で書く（ac-review が参考に拾う）。

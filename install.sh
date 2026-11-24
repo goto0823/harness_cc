@@ -113,6 +113,10 @@ if [ -e "$app/.claude/project.md" ] && ! grep -q '^## 課題管理（Backlog）'
   echo "  手で足す:   .claude/project.md に「## 課題管理（Backlog）」の節"
   notes+=(".claude/project.md に harness_cc/templates/project.md の「## 課題管理（Backlog）」の節を足す（/pm を使わないなら中身は「なし」）")
 fi
+if [ -e "$app/.claude/project.md" ] && ! grep -q '同時に回すタスクの数' "$app/.claude/project.md"; then
+  echo "  手で足す:   .claude/project.md の「## 並行作業」に新しい項目"
+  notes+=(".claude/project.md の「## 並行作業」を harness_cc/templates/project.md のものに合わせる（置き場・worktree ごとに分けるもの・同時に回すタスクの数・子の cc の起動。/pm run を使わないなら「なし」）")
+fi
 if [ -e "$app/.claude/headless-build.json" ] && ! grep -qF '"Bash(bee *)"' "$app/.claude/headless-build.json"; then
   echo "  手で足す:   .claude/headless-build.json の deny に \"Bash(bee)\" と \"Bash(bee *)\""
   notes+=(".claude/headless-build.json の permissions.deny に \"Bash(bee)\" と \"Bash(bee *)\" を足す（ヘッドレスの build が Backlog に触らないように）")

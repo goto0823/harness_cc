@@ -40,13 +40,13 @@ push と PR はしない。仕上げの `/deliver` がやる。
 - `docs/accept/<タスク名>/accept.md` があるなら `status: approved`。`draft` なら「受け入れテストの承認を先に」と伝えて止まる。無ければそのまま始める（中身は読まない。status の行だけ見る）
 - app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` はこのタスクのベースブランチ（spec の frontmatter の `base:`。無ければ project.md の「PR の向き先」）。<default> は既定のベースブランチ（project.md の「PR の向き先」）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
   - <branch> にいる: そのまま（並行作業で project.md の「並行作業」の始め方で入ったときもここ）
-  - `<base>` か <default> にいて、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
+  - `<base>` か <default> にいるか、HEAD が detached（`git branch --show-current` が空。並行作業の worktree を `git worktree add --detach` で作った直後）で、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
     `origin/<base>` が無ければ（`git branch -r --list origin/<base>` が空）「spec の `base:` のブランチが origin に無い」と伝えて止まる。
     <branch> が手元か origin にあれば（`git branch --list <branch>`、`git branch -r --list origin/<branch>`）`git switch <branch>`、
     どちらにも無ければ `git switch -c <branch> origin/<base>`（今いるブランチでなく、`origin/<base>` を名指しで起点にする）。入ったら、停止の出力の「ここまで」に「ブランチ <branch> を <base> から作った／に入った」と書く
-  - `<base>` か <default> にいて、app に未コミットの変更がある: 止まって聞く（次の項目と同じ）。stash も破棄もしない
+  - `<base>` か <default> にいるか detached で、app に未コミットの変更がある: 止まって聞く（次の項目と同じ）。stash も破棄もしない
   - 別のブランチにいる: 別のタスクの途中かもしれないので、止まって聞く。切り替えない
-- app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空。関係ない変更があれば止まって聞く。stash も破棄もしない。
+- app の `git status --porcelain` が空。docs は、このタスクのファイルに未コミットの変更が無い（`(cd docs && git status --porcelain)` の行のうち、パスにほかのタスク名が入る行と `pm/` の行は見ない。並行作業で docs を共有すると、ほかのタスクの書きかけが見えるため）。docs のコミットが `index.lock` で断られたら、ほかのタスクが同時にコミットしている。少しおいて 1 回だけやり直す。関係ない変更があれば止まって聞く。stash も破棄もしない。
   `docs/` は app とは別の git リポジトリ（project.md の「置き場」）で、spec・plan・todo・review はそちらに入る
 - 何も変えていない状態で `scripts/check.sh --quick` が通る。通らなければ「着手前から落ちている」として止まる。直さない
 - 小で todo が無い、または todo に「作業順」が無い（差し戻しの節だけの todo）ときは、spec の AC を番号順に 1 本 1 ステップにした `docs/plan/<タスク名>-todo.md` を作ってから始める（最後に CP を 1 つと仕上げを置く。plan.md は作らない）。形は plan の todo.md と同じ。「spec への差し戻し」は、既にある行を残し、無ければ「なし」で置く。
@@ -77,8 +77,8 @@ auto でも聞く。ヘッドレスでは聞けないので 6 の形で止まる
    - 落ちたらコードを直してから回し直す。コードを変えずに同じコマンドを回し直さない
 4. **コミット**（確認がすべて通ったときだけ）
    - そのステップで触ったファイルだけを `git add <path>` する。`git add -A` と `git add .` は打たない
-   - todo.md の該当ステップにチェックを付け、docs リポジトリで同じ P-n を付けてコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo")`）。docs は app とは別の git リポジトリなので、app のコミットには入らない
-   - app のコミットを revert したら、docs の todo の該当チェックも外して、docs で別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo を戻す")`）
+   - todo.md の該当ステップにチェックを付け、docs リポジトリで同じ P-n を付けてコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo" -- plan/<タスク名>-todo.md)`）。docs は app とは別の git リポジトリなので、app のコミットには入らない
+   - app のコミットを revert したら、docs の todo の該当チェックも外して、docs で別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo を戻す" -- plan/<タスク名>-todo.md)`）
    - docs の git 操作は `(cd docs && git ...)` の形で書く。`-C docs` を付けた git は deny のパターンに一致しないので使わない（deny はサブシェルの中にも効く）
    - メッセージは `<type>(<略号>): P-n <見出し> (AC-XXX-n)`。type は変更の性質で選ぶ（feat / fix / test / refactor）。テストしか書かないステップは test
 5. 次のステップへ。`/build` なら、ここで止まる。止まる条件ではないが、出し方は 6 と同じ（理由: 「1 ステップ完了」）
@@ -154,7 +154,7 @@ todo.md の「申し送り」に 1 行足してから、次の形で出力して
 - **ui-check 由来の指摘**（根拠がスクショのパス）を直したら、「画面の確認」のその AC の行を「AC-XXX-n: 未確認: <内容>（R<n>-<番号> を直した。再確認）」に書き換える。行は足さない。
   ロールが並んでいる行は直したロールの部分だけを書き換え、行の頭は一番悪い状態にする（期待と違う ＞ 未確認 ＞ 確認済み。ui-check の書き方）。
   書き換えないと、次の ac-review が古い「期待と違う」をまた必須にして、fix が「前回と同じ」で止まる。
-  todo は docs リポジトリで別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): R<n>-<番号> 再確認待ち")`）
+  todo は docs リポジトリで別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): R<n>-<番号> 再確認待ち" -- plan/<タスク名>-todo.md)`）
 - 各コミットの前に `scripts/check.sh --quick`。全部直したら全体の `scripts/check.sh`
 
 ### 止まる（6 の形で）
@@ -195,7 +195,7 @@ fix(rcr): R1-3 空白だけの理由を trim してから判定する
 - green の間にテストのミス以外を書き換えた
 - `git add -A` / `git add .` を打った。todo のチェックを docs リポジトリでコミットしなかった
 - push、PR、force push、rebase など、履歴を書き換える・外に出す操作をした
-- 入口で `<base>`・<default>・<branch> 以外のブランチから切り替えた。未コミットの変更があるのに切り替えた
+- 入口で `<base>`・<default>・<branch>・detached HEAD 以外のブランチから切り替えた。未コミットの変更があるのに切り替えた
 - `origin/<base>` でなく、今いるブランチを起点に <branch> を切った（<default> にいるとき、spec の `base:` と違うところから切ってしまう）
 - 禁止されたコマンドを、別の書き方で回避しようとした（`git add -A` を `git add .` に、`--force` を `+refspec` に、など）
 - 自分の実装をレビューして合格扱いにした

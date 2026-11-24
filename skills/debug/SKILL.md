@@ -54,13 +54,13 @@ debug は、**再現するテストで red を見てから**原因を探し、�
 ## 進め方
 
 ### 0. 入口を確かめる（1 つでも満たさなければ止まる）
-- 作業ツリー: app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` を見る。stash も破棄もしない
+- 作業ツリー: app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` を見る。stash も破棄もしない。docs の行のうち、パスにほかのタスク名が入る行と `pm/` の行は見ない（並行作業で docs を共有すると、ほかのタスクの書きかけが見えるため）。docs のコミットが `index.lock` で断られたら、少しおいて 1 回だけやり直す
   - 単独のバグ: どちらも空。変更があれば止まって聞く
   - タスクの続き: build の停止の出力（todo の申し送りの最新の行と「未コミット:」の一覧）にある変更と、docs の todo.md だけなら、そのまま引き継ぐ。
     debug.md の「証拠」に引き継いだファイルを書く。一覧に無い変更があれば止まって聞く
 - ブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る。docs は docs のベースブランチのままが正しいので見ない）: ベースブランチにいない。`<base>` は、タスクの続きなら spec の `base:`（無ければ project.md の「PR の向き先」）、単独のバグなら project.md の「PR の向き先」（人が向き先を言ったらそのブランチ。origin に無ければ止まって聞く）。<default> は project.md の「PR の向き先」
-  - 単独のバグ: `fix/<短い名前>` にいる。`<base>` か <default> にいて app の `git status --porcelain` が空なら、`git fetch origin` のあと `git switch -c fix/<短い名前> origin/<base>` で入る（手元か origin にあれば `git switch fix/<短い名前>`）。別のブランチにいるなら止まって聞く。切り替えない
-  - タスクの続き: plan.md の `branch:` にいる。`scale: 小` で plan.md が無いなら `feat/<タスク名>` にいる。`<base>` か <default> にいるときの入り方は build の 0 と同じ
+  - 単独のバグ: `fix/<短い名前>` にいる。`<base>` か <default> にいるか HEAD が detached で、 app の `git status --porcelain` が空なら、`git fetch origin` のあと `git switch -c fix/<短い名前> origin/<base>` で入る（手元か origin にあれば `git switch fix/<短い名前>`）。別のブランチにいるなら止まって聞く。切り替えない
+  - タスクの続き: plan.md の `branch:` にいる。`scale: 小` で plan.md が無いなら `feat/<タスク名>` にいる。`<base>` か <default> にいるとき、HEAD が detached（並行作業の worktree）のときの入り方は build の 0 と同じ
 - 症状が「新しい振る舞いが欲しい」なら debug ではない。「spec が要る」と伝えて止まる（`/spec`）
 - 症状がレビューの指摘（`docs/review/` の `R<n>-<番号>`）なら `/build fix <タスク名>` を案内して止まる
 
@@ -128,7 +128,7 @@ debug は、**再現するテストで red を見てから**原因を探し、�
 
 debug.md に「原因」「直し方」「直し方が触るファイル」「直さないもの」を書き、docs リポジトリでコミットする:
 
-    (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md && git commit -m "docs(debug): <短い名前> 原因")
+    (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md && git commit -m "docs(debug): <短い名前> 原因" -- debug/<YYYY-MM-DD>-<短い名前>.md)
 
 そして次の形で出して止まる。**下の質問で「直す」が返るまで直さない。** 再現テストは未コミットのまま残す（落ちるテストはコミットしない。pre-push が落ちる）。
 
@@ -166,8 +166,8 @@ debug.md に「原因」「直し方」「直し方が触るファイル」「�
 - debug.md の「結果」（コミットのハッシュ、確認の結果）を書いて docs でコミットする。タスクの続きなら、todo の申し送りにも 1 行足し（`| 日付 | debug | <短い名前> を直した（<ハッシュ>） | 原因: <1 行> |`）、todo も同じコミットに入れる。
   todo を入れ忘れると docs の作業ツリーが空にならず、次の `/build` が入口で止まる
 
-      単独のバグ:   (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md && git commit -m "docs(debug): <短い名前> 修正")
-      タスクの続き: (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md plan/<タスク名>-todo.md && git commit -m "docs(debug): <短い名前> 修正")
+      単独のバグ:   (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md && git commit -m "docs(debug): <短い名前> 修正" -- debug/<YYYY-MM-DD>-<短い名前>.md)
+      タスクの続き: (cd docs && git add debug/<YYYY-MM-DD>-<短い名前>.md plan/<タスク名>-todo.md && git commit -m "docs(debug): <短い名前> 修正" -- debug/<YYYY-MM-DD>-<短い名前>.md plan/<タスク名>-todo.md)
 
 最後に「次」を 1 行出して止まる:
 - タスクの続き: 「次は `/build <タスク名>`（止まったステップから）」。直したコミットは ac-review がそのまま採点する

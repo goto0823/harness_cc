@@ -112,7 +112,7 @@ CLAUDE.md の「規模と進め方」に当てはめる。
 
 ### 5. 保存して、止まる
 末尾の「確認項目」を通してから `docs/spec/<タスク名>-spec.md` に `status: draft` で保存し、docs リポジトリでコミットしてから
-（`(cd docs && git add spec/<タスク名>-spec.md && git commit -m "docs(<略号>): spec <タイトル>（draft）")`。docs は app とは別の git リポジトリ）、
+（`(cd docs && git add spec/<タスク名>-spec.md && git commit -m "docs(<略号>): spec <タイトル>（draft）" -- spec/<タスク名>-spec.md)`。docs は app とは別の git リポジトリ）、
 要約を出して、AskUserQuestion で聞く。
 - 未決事項が残っていれば、先に 1 つ 1 問で聞く。答えは決定ログに書き、下書きを直して保存・コミットし直す。答えで新しい未決が出たら、また聞く
 - 未決が空になったら、承認を 1 問で聞く:「確定する（推奨）／直したいところがある／保留」
@@ -122,7 +122,7 @@ CLAUDE.md の「規模と進め方」に当てはめる。
 
 ### 6. 「確定」と言われたら（5 の質問で「確定する」を選ばれたときも）
 未決事項が空であることを確かめて `status: approved` にし、`updated` を更新して docs でコミットし
-（`(cd docs && git add spec/<タスク名>-spec.md && git commit -m "docs(<略号>): spec <タイトル>（approved）")`）、
+（`(cd docs && git add spec/<タスク名>-spec.md && git commit -m "docs(<略号>): spec <タイトル>（approved）" -- spec/<タスク名>-spec.md)`）、
 次を規模で分けて伝えて止まる。未決が残っているなら、approved にせず残りを聞く。
 - 中以上: 「次は新しいセッションで `/plan <タスク名>`」。plan はブランチを見ないので、app は既定のベースブランチ（project.md の「PR の向き先」）のままでよい
 - 小: 「受け入れテストを作るなら、次は別セッション（build と別のモデル）で `/accept-test <タスク名>`。作らないなら、次は新しいセッションで `/build <タスク名>`」。
@@ -140,7 +140,7 @@ CLAUDE.md の「規模と進め方」に当てはめる。
 1. S-n ごとに AskUserQuestion で「spec をこう直す（案を書く）／spec は今のままでよい」を聞いて決め、どちらも決定ログに書く。前提一覧（2）と質問（3）の進め方は新しく書くときと同じ
 2. 直すものが 1 つでもあれば `status: draft` に戻して直し、5 と同じように保存・コミットして止まる。今のままでよいものだけなら approved のまま
 3. 5 と同じ承認の質問で「確定する」を選ばれたら（今のままでよいものだけなら決めた時点で）approved にし、todo の該当行を `- [x] S-n <内容> → <決めたこと>（決定ログ YYYY-MM-DD）` にして、spec と一緒に docs でコミットする
-   （`(cd docs && git add spec/<タスク名>-spec.md plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec <タイトル>（S-n を反映して approved）")`）。
+   （`(cd docs && git add spec/<タスク名>-spec.md plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec <タイトル>（S-n を反映して approved）" -- spec/<タスク名>-spec.md plan/<タスク名>-todo.md)`）。
    `[ ]` を残したままだと、build も plan も入口で止まる。
    ui-check か ac-review で発覚した S-n で、その AC の「画面の確認」の行が「期待と違う」なら、行を「AC-XXX-n: 未確認: <内容>（S-n で AC を見直した。再確認）」に書き換えて同じコミットに入れる（そのままだと ac-review がまた必須にする）
 4. 次をこの順で伝えて止まる（当てはまらないものは飛ばす）:

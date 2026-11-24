@@ -71,7 +71,7 @@ spec とのずれが見つかったら推測で吸収せず、ずれを列挙し
 コードを読むと、spec の前提が古い、AC が今のコードでは成り立たない、境界に触らずには作れない、が見つかることがある。
 **plan で吸収しない。** ずれを列挙して止まり、spec を直してもらう（決定ログに追記、`draft` に戻して再承認。spec スキルの 7）。
 止まる前に、ずれを 1 件ずつ todo.md の「spec への差し戻し」に `- [ ] S-n <ずれ>（AC-XXX-n、plan で発覚）` で書き、docs でコミットする
-（todo.md が無ければ、見出しと「spec への差し戻し」の節だけの todo.md（`# todo: <タイトル>`・`plan: （未作成）`・`## spec への差し戻し`）を作る。`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec への差し戻し S-n")`）。
+（todo.md が無ければ、見出しと「spec への差し戻し」の節だけの todo.md（`# todo: <タイトル>`・`plan: （未作成）`・`## spec への差し戻し`）を作る。`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec への差し戻し S-n" -- plan/<タスク名>-todo.md)`）。
 「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）。再承認後に `/plan <タスク名>`」と伝える。書かないと、新しいセッションの `/spec` に何を直すかが届かない。
 この節の「止まる」（3 から戻ってきたものを含む）はすべてこの形で止まる。
 ずれが無ければ「照合: ずれなし」と一言添えて先へ進む。ここで止まるのはずれがあるときだけ。
@@ -101,14 +101,14 @@ spec とのずれが見つかったら推測で吸収せず、ずれを列挙し
 
 ### 5. 保存して、止まる
 末尾の「確認項目」を通してから plan.md（`status: draft`）と todo.md を保存し、docs リポジトリでコミットしてから
-（`(cd docs && git add plan/<タスク名>-plan.md plan/<タスク名>-todo.md && git commit -m "docs(<略号>): plan <タイトル>（draft）")`。docs は app とは別の git リポジトリ）、
+（`(cd docs && git add plan/<タスク名>-plan.md plan/<タスク名>-todo.md && git commit -m "docs(<略号>): plan <タイトル>（draft）" -- plan/<タスク名>-plan.md plan/<タスク名>-todo.md)`。docs は app とは別の git リポジトリ）、
 要約（ステップ数、テスト数、外の約束の数、「先に聞く」の印の数、チェックポイントの位置、spec との照合結果）を出して、AskUserQuestion で承認を聞く:
 「確定する（推奨）／直したいところがある／保留」。直したいところがあるなら Other の内容で直し、保存・コミットしてからもう一度聞く。保留なら draft のまま止まる。
 答えを待つ間もそのあとも、テストもコードも書かない。
 
 ### 6. 「確定」と言われたら（5 の質問で「確定する」を選ばれたときも）
 plan.md を `status: approved` にし、`updated` を更新して docs でコミットし
-（`(cd docs && git add plan/<タスク名>-plan.md && git commit -m "docs(<略号>): plan <タイトル>（approved）")`）、次を伝えて止まる:
+（`(cd docs && git add plan/<タスク名>-plan.md && git commit -m "docs(<略号>): plan <タイトル>（approved）" -- plan/<タスク名>-plan.md)`）、次を伝えて止まる:
 「受け入れテストを作るなら、次は別セッション（build と別のモデル）で `/accept-test <タスク名>`。その承認後に新しいセッションで `/build <タスク名>`。作らないなら、次は新しいセッションで `/build <タスク名>`。作るかどうかは CLAUDE.md の規模の表で決める（中以上は作る）。入り方は plan の冒頭の『使い方』」
 ブランチは build が入口で作る（app がこのタスクのベースブランチ（spec の `base:`。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」）にいて作業ツリーが空なら、plan の `branch:` を `origin/<base>` から切る）ので、人は切り替えなくてよい。
 並行作業で worktree を使うときだけ、「`/build` の前に project.md の「並行作業」の始め方で `<branch>` に入る」と添える。plan は自分でブランチを切り替えない
@@ -134,7 +134,7 @@ plan.md を `status: approved` にし、`updated` を更新して docs でコミ
 
 ### 1 ステップ = 1 コミット
 - そのステップで触ったファイルだけを `git add <path>` で積む。`git add -A` はしない（生成物や隣のステップの変更を巻き込む）
-- todo.md のチェックの更新は docs リポジトリで、同じ P-n を付けて別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo")`）。docs は app とは別の git リポジトリなので、app のコミットには入らない。`-C docs` を付けた git は deny に一致しないので使わない
+- todo.md のチェックの更新は docs リポジトリで、同じ P-n を付けて別にコミットする（`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): P-n todo" -- plan/<タスク名>-todo.md)`）。docs は app とは別の git リポジトリなので、app のコミットには入らない。`-C docs` を付けた git は deny に一致しないので使わない
 - メッセージは `<type>(<略号>): P-n <見出し> (AC-XXX-n)`。例: `feat(rcr): P-2 返金失敗時もキャンセルして返金エラーにする (AC-RCR-2)`
 - チェックポイントで直すものが無ければコミットは無し。直したら `fix(rcr): CP-1 <直したこと>`
 
