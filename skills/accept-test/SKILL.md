@@ -114,7 +114,7 @@ build はこのテストを見ない。テストが勝手に決めた URL・パ�
 ### AC のことで止まるとき（1〜4 のどこでも）
 「spec の AC に書いてほしい」（文書の読み方）、「AC が既に満たされているか、Then が弱い」で Then を直せないとき、「AC に認可を足してほしい」は、どれも AC のことで止まる。
 止まる前に、1 件ずつ todo.md の「spec への差し戻し」に `- [ ] S-n <AC に足りないこと>（AC-XXX-n、accept-test で発覚）` で書き、docs でコミットする
-（todo.md が無ければ、見出しと「spec への差し戻し」の節だけの todo.md（`# todo: <タイトル>`・`plan: （未作成）`・`## spec への差し戻し`）を作る。`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec への差し戻し S-n")`）。
+（todo.md が無ければ、見出しと「spec への差し戻し」の節だけの todo.md（`# todo: <タイトル>`・`plan: （未作成）`・`## spec への差し戻し`）を作る。`(cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): spec への差し戻し S-n" -- plan/<タスク名>-todo.md)`）。
 書きかけのテストはコミットしない。「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）。再承認後に `/accept-test <タスク名>`」と伝える。
 plan の「外の約束」が足りないだけ（「plan に次の約束を足してほしい」）は spec のことではないので、差し戻しには書かない
 
@@ -123,11 +123,11 @@ plan の「外の約束」が足りないだけ（「plan に次の約束を足�
 「確定する（推奨）／直したいところがある／保留」。直したいところがあるなら Other の内容で直し、コミットしてからもう一度聞く。保留なら draft のまま止まる。
 答えを待つ間もそのあとも、実装もテストの追加もしない。
 
-    (cd docs && git add accept/<タスク名> && git commit -m "test(<略号>): 受け入れテスト draft（<n> 本）")
+    (cd docs && git add accept/<タスク名> && git commit -m "test(<略号>): 受け入れテスト draft（<n> 本）" -- accept/<タスク名>)
 
 ### 6. 「確定」と言われたら（5 の質問で「確定する」を選ばれたときも）
 accept.md を `status: approved` にして docs でコミットし、「次は新しいセッション（accept-test と別のモデル）で `/build <タスク名>`。採点は別セッションの `/ac-review <タスク名>` が `scripts/accept.sh` で回す」と伝えて止まる。
-伝える前に **build の入口を確かめる**: spec（中以上なら plan も）が docs でコミット済みで `(cd docs && git status --porcelain)` が空、app の `git status --porcelain` が空、app がベースブランチ（spec の `base:` か、既定の project.md の「PR の向き先」）か `feat/<タスク名>`（plan があれば `branch:` のブランチ）にいる（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る。ベースブランチなら build が入口でブランチを作る。docs は docs のベースブランチのままでよい）。足りないものは「`/build` の前に <これ>」と列挙して渡す。approved 済みの spec が未コミットなら docs でコミットしてよい。ブランチはこのスキルでは切り替えない（build がやる）。小で todo が無いのは足りないものではない（build が作る）
+伝える前に **build の入口を確かめる**: spec（中以上なら plan も）が docs でコミット済みで、docs にこのタスクの未コミットの変更が無い（ほかのタスクの行と `pm/` の行は見ない）、app の `git status --porcelain` が空、app がベースブランチ（spec の `base:` か、既定の project.md の「PR の向き先」）か `feat/<タスク名>`（plan があれば `branch:` のブランチ）にいるか、HEAD が detached（並行作業の worktree）（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る。ベースブランチなら build が入口でブランチを作る。docs は docs のベースブランチのままでよい）。足りないものは「`/build` の前に <これ>」と列挙して渡す。approved 済みの spec が未コミットなら docs でコミットしてよい。ブランチはこのスキルでは切り替えない（build がやる）。小で todo が無いのは足りないものではない（build が作る）
 **以後このスキルもテストを書き換えない。** 変えてよいのは、spec か plan の約束が変わったとき（決定ログ → draft → 再承認）と、テストのミス（約束の読み違い）が採点で見つかったときだけ。どちらも accept.md を `draft` に戻し、「変更ログ」に理由を書いてから直し、再承認を求める。
 人が応答できない環境（ヘッドレス）では draft までで止まる。approved にするのは人の仕事。
 

@@ -68,7 +68,7 @@ push と PR は外から見える操作で、取り消しがききにくい。�
   `fail` なら「次は新しいセッションで `/build fix <タスク名>`」、2 行目に「採点が成り立たない」があれば「人が確かめる」と伝えて止まる
 - **レビューの `head:` と `git rev-parse HEAD` が一致する。** 違えば、レビューのあとに積んだコミットを誰も採点していない。
   「次は別セッションで `/ac-review <タスク名>`」と伝えて止まる。小さな直しでも進めない
-- app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空
+- app の `git status --porcelain` が空。docs は、このタスクのファイルに未コミットの変更が無い（`(cd docs && git status --porcelain)` の行のうち、パスにほかのタスク名が入る行と `pm/` の行は見ない。並行作業で docs を共有すると、ほかのタスクの書きかけが見えるため）。docs のコミットが `index.lock` で断られたら、ほかのタスクが同時にコミットしている。少しおいて 1 回だけやり直す
 - app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。このタスクのベースブランチ（spec の `base:`。無ければ project.md の「PR の向き先」。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」。以下 <default>）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは下の行で別に見る
 - **PR の向き先が、採点した起点と同じ。** レビューの `base:` の行の括弧の中が `origin/<base>` で、`git fetch origin <base>` のあと
   `git rev-list --count origin/<base>..HEAD` が `git rev-list --count <レビューの base のハッシュ>..HEAD` と同じ。
@@ -108,7 +108,7 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 
 更新したファイルだけを add してコミットする:
 
-    (cd docs && git add <path> ... && git commit -m "docs(<略号>): deliver <タスク名>")
+    (cd docs && git add <path> ... && git commit -m "docs(<略号>): deliver <タスク名>" -- <path> ...)
 
 `-C docs` は使わない（deny のパターンに一致しない）。`git add -A` / `.` も使わない。
 
@@ -148,7 +148,7 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
          (cd docs && git push origin <docs-base>)
 
      remote が先に進んでいて断られたら（ほかの作業が先に push した）、`(cd docs && git pull --rebase origin <docs-base>)` で取り込んでからもう一度 push する。
-     docs の作業ツリーにほかのタスクの書きかけがあって pull できないときは、stash せずに止まって出す（書きかけはそのタスクのもの）。
+     docs の作業ツリーにほかのタスクの書きかけがあって `--rebase` が断られた（rebase は作業ツリーが空でないと始まらない）ら、`(cd docs && git pull --no-rebase --no-edit origin <docs-base>)`（マージ。書きかけのファイルに触らない取り込みなら通る。`--no-edit` が無いとマージのメッセージを書くエディタが開き、cc からは閉じられずに止まる）で取り込む。ステージに置いた変更があるとマージも断られる（ほかのタスクがコミットしている最中）ので、少しおいて 1 回だけやり直す。それも断られたら、stash せずに止まって出す（書きかけはそのタスクのもの）。
      push できたら、deliver のコミットのハッシュ（`(cd docs && git rev-parse HEAD)`）を控える。`pull --rebase` するとハッシュが下書きのときと変わるので、この節の 4 で作る app の PR のリンクは、下書きのハッシュではなくこのハッシュで作る
 
 2. app を push する
@@ -165,9 +165,9 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 5. 付いたかを確かめる。project.md の「付いたかの確かめ方」で、件数が 3 で選んだ枚数と一致する。確かめ方が「なし」なら、付けたファイル名を 6 で出す
 6. todo.md の申し送りの deliver の行に PR の番号（【PR】docs と app の 2 つ、【直接 push】app の 1 つ）を書いて docs でコミットし、push する
 
-       (cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): deliver <タスク名> PR 番号" && git push)
+       (cd docs && git add plan/<タスク名>-todo.md && git commit -m "docs(<略号>): deliver <タスク名> PR 番号" -- plan/<タスク名>-todo.md && git push)
 
-   【PR】push 先は `deliver/<タスク名>`。【直接 push】push 先は `<docs-base>`。断られたら 1 と同じく `pull --rebase` してからもう一度 push する
+   【PR】push 先は `deliver/<タスク名>`。【直接 push】push 先は `<docs-base>`。断られたら 1 と同じく `pull --rebase`（断られたら `--no-rebase`）してからもう一度 push する
 
 7. ベースブランチに戻す（次の build は、次のタスクの spec の `base:` から新しいブランチを切る。app は既定の <default> に戻す）
    - 【PR】docs も戻す（次のタスクの spec が `deliver/<タスク名>` にコミットしないように）

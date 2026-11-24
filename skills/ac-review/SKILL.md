@@ -45,7 +45,7 @@ spec が「何を」、plan が「どう」、build が「作った」。ac-revi
 - plan.md が `status: approved`。`scale: 小` で plan が無いなら spec が `status: approved`
 - todo.md で、仕上げ（P-n）より前のステップと CP がすべてチェック済み。「spec への差し戻し」に `[ ]` の行が無い（あれば `/spec <タスク名>` が先）
 - app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。このタスクのベースブランチ（spec の `base:`。無ければ project.md の「PR の向き先」。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
-- app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空。未コミットのものはレビューしない。
+- app の `git status --porcelain` が空。docs は、このタスクのファイルに未コミットの変更が無い（`(cd docs && git status --porcelain)` の行のうち、パスにほかのタスク名が入る行と `pm/` の行は見ない。並行作業で docs を共有すると、ほかのタスクの書きかけが見えるため）。docs のコミットが `index.lock` で断られたら、ほかのタスクが同時にコミットしている。少しおいて 1 回だけやり直す。未コミットのものはレビューしない。
   `docs/` は app とは別の git リポジトリ（project.md の「置き場」）で、spec・plan・todo・review はそちらに入る
 - この会話で build を回していない。回していたら「新しいセッションで `/ac-review` を」と伝えて止まる
 - 比べる起点を出す。ベースは `<base>`（spec の `base:`。無ければ project.md の「PR の向き先」）。
@@ -118,7 +118,7 @@ spec が「何を」、plan が「どう」、build が「作った」。ac-revi
 **1 行目は必ず `result: pass` か `result: fail`**（build の fix モードがこの行を読む）。採点が成り立たないときは 2 行目に「採点が成り立たない: …」（build fix はこの行でも止まる）。
 書いたら、そのファイルだけを docs リポジトリで add してコミットする。コミットが無いと、build fix と次のレビューの入口（status が空）で止まる。
 
-    (cd docs && git add review/<タスク名>-review-<n>.md && git commit -m "docs(<略号>): review-<n> <pass|fail>")
+    (cd docs && git add review/<タスク名>-review-<n>.md && git commit -m "docs(<略号>): review-<n> <pass|fail>" -- review/<タスク名>-review-<n>.md)
 
 AC の疑いで todo.md に S-n を足したときは、`plan/<タスク名>-todo.md` も同じ `git add` に入れる。
 

@@ -74,10 +74,14 @@ ui-check が撮り、ac-review と deliver が使う。
 - app のセッションから開くとき: <ここに: 例 `../local/screenshots/...`>
 
 ## 並行作業
-worktree などで、同時に 2 つ以上のタスクを進めるとき。
-- 始め方: <ここに: 例 `git worktree add ../<branch> -b <branch>`。並行作業しないなら「なし」>
-- 終わり方: <ここに>
-- worktree の中の docs: <ここに: worktree で docs がどう見えるか（コピーか、本体の docs へのシンボリックリンクで共有か）、積んだコミットを本体の docs にどう戻すか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）>
+worktree で、同時に 2 つ以上のタスクを進めるとき（`/pm run` もこれを使う。`/pm run` は herdr（https://github.com/ogulcancelik/herdr）のパネルの中で使う。`herdr integration install claude` を入れておくと、cc の状態の見分けが確かになる）。並行作業しないなら、全部「なし」と書く。
+- 置き場: <ここに: 例 app の 1 つ上の `wt/`。worktree は `<置き場>/<タスク名>` に作る>
+- 始め方: <ここに: 例 `git fetch origin && git worktree add --detach <置き場>/<タスク名> origin/<PR の向き先>` → `ln -s "$(pwd)/docs" <置き場>/<タスク名>/docs` → `cp .env <置き場>/<タスク名>/`。ブランチは切らない（`--detach`）。build が入口で spec の `base:` から切る>
+- 終わり方: <ここに: 例 PR がマージされたら `git worktree remove <置き場>/<タスク名>`。消す前に、その worktree の app を止める>
+- worktree の中の docs: <ここに: 本体の docs へのシンボリックリンクで共有する（推奨）か、コピーか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）。各スキルは docs の自分のタスクのファイルだけを見て、`git commit -- <パス>` で自分のファイルだけをコミットする>
+- worktree ごとに分けるもの: <ここに: 例 テストの DB 名（`.claude/harness.env` の `harness_env` で、worktree のディレクトリ名から `app_test_<タスク名>` を作る）、app のポート、`.env` の値。分けないと、同時に回る build のテストが互いのデータを消して、コードが正しくても落ちる>
+- 同時に回すタスクの数: <ここに: 例 `2`。テストの DB とポートを分けられないなら `1`（spec・plan・受け入れテストだけ並べたいときも `1` にして、人が別の会話で回す）>
+- 子の cc の起動（`/pm run` が `herdr agent start <名前> --kind claude --pane <パネル> -- <ここの引数>` で使う）: <ここに: 例 `--model opus --permission-mode acceptEdits`。許していない操作は子のパネルで確認のダイアログになり、人がそのパネルで答える（pm は答えない）。止まる回数を減らすなら、子が使うもの（編集、`scripts/check.sh`、docs と app の `git add` / `git commit`、`claude -p`（build））を `.claude/settings.local.json` の allow で通す。`git push`（deliver）は、deliver が人の「出す」を待つので、確認が出てもよい>
 
 ## PR と課題管理
 - PR を作るコマンド: <ここに: 例 `gh pr create --base <ベース> --head <branch> --title "<タイトル>" --body-file <本文のファイル>`>
@@ -86,6 +90,17 @@ worktree などで、同時に 2 つ以上のタスクを進めるとき。
 - 付いたかの確かめ方: <ここに: 無ければ「なし」>
 - 認証情報の扱い: <ここに: 例 トークンを出すコマンドはコマンド置換の中でだけ使い、画面に出さない>
 - 課題のキー: <ここに: 例 `PROJ-123` の形。spec には入れない>
+
+## 課題管理（Backlog）
+`/pm` が bee（Backlog の CLI。`npm install -g @nulab/bee` → `bee auth login`）で使う。`/pm` を使わないなら、全部「なし」と書く。
+ID は `bee issue-type list -p <プロジェクトキー> --json`、`bee status list -p <プロジェクトキー> --json` で調べる。
+- スペース: <ここに: 例 `xxx.backlog.com`>
+- プロジェクトキー: <ここに: 例 `PROJ`>
+- 親課題（タスク）の種別 ID: <ここに: 例 `12345`（「タスク」）>
+- 子課題（作業ステップ）の種別 ID: <ここに: 例 `12346`（「サブタスク」）>
+- 状態 ID: <ここに: 例 未対応 `1` / 処理中 `2` / 処理済み `3` / 完了 `4`>
+- 説明の記法: <ここに: `markdown` か `backlog`（プロジェクトの設定の「テキスト整形のルール」）>
+- 課題の URL の形: <ここに: 例 `https://xxx.backlog.com/view/<課題キー>`>
 
 ## デバッグ用のログ
 コミットの前に `git diff` から探して消すもの: <ここに: 例 `dd(`、`console.log`、`print(`>

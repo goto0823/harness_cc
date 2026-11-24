@@ -30,6 +30,8 @@
       "Bash(git push *)",
       "Bash(gh pr create)",
       "Bash(gh pr create *)",
+      "Bash(bee)",
+      "Bash(bee *)",
       "Edit(docs/spec/**)",
       "Edit(docs/plan/*-plan.md)",
       "Read(docs/accept/**)",

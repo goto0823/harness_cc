@@ -13,6 +13,8 @@ app の `CLAUDE.md` に、次の 2 節を足す。スキルは「CLAUDE.md の�
 | 小 | 1 つの振る舞いの追加・変更。新しい URL・列・エラーコードは要らない | `/spec` → `/accept-test`（任意）→ `/build` → `/ui-check` → `/ac-review` → `/deliver` |
 | 中以上 | 新しい URL・列・エラーコードが要る。複数の振る舞い。「先に聞く」に触る | `/spec` → `/plan` → `/accept-test` → `/build` → `/ui-check` → `/ac-review` → `/deliver` |
 
+大きい要望（別々にテストでき、別々に完了と言える機能が複数ある）は、先に `/pm plan` でタスクに分ける。進み具合は `/pm status`。
+
 <ここに: PJ で足したい目安があれば>
 
 ## 3 段階（いつもやる／先に聞く／絶対やらない）

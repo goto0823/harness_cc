@@ -10,6 +10,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 
 ```
 /arch（最初に 1 回。設計の規約を変えるとき）
+/pm plan（大きい要望をタスクに分けるとき）　/pm status（進み具合を見る・Backlog に反映するとき。いつでも）
 
 /spec → /plan → /accept-test → /build → /ui-check → /ac-review → /deliver
                                    ↓ 壊れたら
@@ -27,6 +28,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/ui-check` | 動いている app を Playwright で開いて、画面の AC を確かめ、スクショを残す | 新しいセッション |
 | `/ac-review` | spec と plan に照らして採点し、`docs/review/` に書く。受け入れテストもここで回す | **build と別のモデル** |
 | `/deliver` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
+| `/pm` | 要望をタスク（spec 1 本ずつ）に分けて並べ、Backlog にマイルストーンと親課題を作る（`/pm plan`）。docs から進み具合をまとめ、todo の作業ステップを子課題にして Backlog に反映する（`/pm status`） | 人と対話 |
 | `/orchestrate` | spec から deliver までを、各スキルの新しい会話で順に回す。人は質問に答えるだけ（§8） | 人と対話（人が打ったときだけ） |
 
 規模で入口が変わる（`templates/CLAUDE.md` の「規模と進め方」）。
@@ -102,6 +104,7 @@ deny は allow より先に評価されるので、`settings.local.json` の all
 - `git commit -a` / `-am` / `--all` / `--amend`（後ろに来る形も。メッセージ中の `" -a"` で止まるのは許容）
 - `git rebase`、`git stash`、`git push`（全部）
 - PR の作成: `gh pr create`
+- Backlog の操作: `bee`（全部。Backlog に書くのは対話の `/pm` だけ）
 - spec と plan の書き換え: `Edit(docs/spec/**)`、`Edit(docs/plan/*-plan.md)`。todo.md は build が更新するので止めない
 - 受け入れテストの読み書きと実行: `Read(docs/accept/**)`、`Edit(docs/accept/**)`、`Read(tests/Acceptance/**)`、`Edit(tests/Acceptance/**)`、`scripts/accept.sh`（4 つの呼び方）
 
@@ -206,6 +209,7 @@ docs/
   accept/<タスク名>/accept.md と受け入れテスト
   review/<タスク名>-review-<n>.md
   debug/<YYYY-MM-DD>-<短い名前>.md
+  pm/<要望名>.md（/pm。タスクの一覧と、Backlog の課題キー）
 ```
 
 - **git 操作の書き方。** スキル内の docs の git 操作は `(cd docs && git add <path> && git commit -m "...")` の形で書く。
@@ -246,7 +250,7 @@ README.md                  この説明
 install.sh                 app に入れる・更新する
 settings.json              いつでも禁止（app の .claude/settings.json へ）
 headless-build.json        build のときだけ禁止（app の .claude/ へ。PJ ごとに足す）
-skills/                    10 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
+skills/                    11 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
 scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
 scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
 templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）
@@ -268,6 +272,27 @@ examples/                  PJ の見本（今は laravel-vue）
 - build のログは app のルート直下の `local/orchestrate/<タスク名>/build-<n>.log`（git 管理外。`.gitignore` に `/local/` を入れる）
 - 人が打ったときだけ動く（`disable-model-invocation: true`）
 
+### 並べて回す（`/pm run <要望名>`。herdr を使う）
+`/pm plan` で分けたタスクを、worktree ごとに子の cc で並べて回す。人は `/pm run` のパネルで、全部のタスクの質問に答える。
+[herdr](https://github.com/ogulcancelik/herdr)（コーディングエージェント向けのターミナルマルチプレクサ。パネルの中の cc が作業中か・入力待ちか・確認のダイアログで止まっているかが分かり、cc から CLI でパネルを作ったり、別のパネルの cc に文を送ったり、状態が変わるのを待ったりできる）のパネルの中で使う。
+
+```
+herdr
+ ├─ pm のパネル（人と話す）: /pm run member-booking-renewal
+ ├─ ワークスペース booking-list   （worktree ../wt/booking-list）   子の cc: /orchestrate pm booking-list
+ └─ ワークスペース booking-cancel （worktree ../wt/booking-cancel） 子の cc: /orchestrate pm booking-cancel
+```
+
+- pm がタスクごとに worktree を作り（project.md の「並行作業」の「始め方」。`--detach` でブランチは切らない）、`herdr worktree open` でワークスペースとして開く。そのパネルで `herdr agent start <名前> --kind claude` で**対話の cc** を立ち上げ、`herdr agent prompt` で `/orchestrate pm <タスク名>` を打ち込む。数は「同時に回すタスクの数」まで
+- 子は人に聞くことが出たら、`local/orchestrate/<タスク名>/pm-<n>.md`（worktree の中）に「## pm へ: 質問」を書いてターンを終える。画面に出すだけにしないのは、cc は画面いっぱいに描くので、長い表を別のパネルから読むのが確実でないため（herdr の docs も、長い応答はファイルにするよう勧めている）
+- pm は `herdr agent wait` をバックグラウンドで回し、子が落ち着いた（入力待ちか、確認のダイアログ）ときに起きる。新しい pm-<n>.md があれば、前提の表をそのまま出して AskUserQuestion で聞き、答えを `herdr agent prompt` で子のパネルに送る。無ければ、子は build などを裏で待っているだけなので待ち直す
+- 子が確認のダイアログ（許可）で止まったら、pm は答えない（ほかの会話からの答えは同意にならない）。「このパネルを見て」と人を案内する。人はどの子のパネルでも、直接話してよい
+- 子は対話の cc なので、build のバックグラウンド実行・終わりの通知・deliver のエージェントへの SendMessage は、1 本で回すときと同じに動く
+- 依存（pm の表の「依存」）があるタスクも、spec・plan・受け入れテストは並べて進める。build の前で止まり、依存先の PR が base にマージされたと人が答えたら続ける。ブランチはどれも build が `origin/<base>` から切る（依存先のブランチの上には積まない）
+- docs は本体の docs をシンボリックリンクで共有し、「docs の出し方」は `直接 push` にする。各スキルは docs の自分のタスクのファイルだけを見て、`git commit -m "..." -- <パス>` で自分のファイルだけをコミットする（`--` の後ろにパスを書くと、git はそのパスだけをコミットするので、ほかのタスクがステージに置いたものが混ざらない）
+- テストの DB とポートは worktree ごとに分ける（project.md の「worktree ごとに分けるもの」）。分けないと、同時に回る build のテストが互いのデータを消す。分けられない PJ は「同時に回すタスクの数」を `1` にする
+- 回している状態（子の名前・ワークスペースの ID・読んだファイルの番号）は `local/pm/<要望名>/state.md`（git 管理外）。pm の会話を閉じても `/pm run <要望名>` で続きから。子のパネルは herdr のサーバーが生かしておく
+
 ### 実際に回して分かったこと（cc_harness で 2026-11-09 に 5 本通したとき）
 - ac-review のサブエージェントが、背景で回した `scripts/check.sh` の終わりで止まったまま起きないことがある。プロンプトで「前景で待つ（timeout 600000）。レビューの作成とコミットまで進めて止まらない」と指示する（orchestrate に組み込み済み）
 - deliver のサブエージェントが PR の下書きを要約だけで返すことがある。「全文をそのまま返す」と指示する（組み込み済み）
@@ -281,6 +306,9 @@ examples/                  PJ の見本（今は laravel-vue）
 2. ヘッドレスの build が、編集・`scripts/check.sh`・`git add` / `git commit` を確認なしで通せるか（`settings.local.json` の allow か `--permission-mode` が要るか）
 3. Agent ツールの `model` に審判側のモデルを渡せるか。審判側のサブエージェントから Playwright の MCP が使えるか
 4. `disable-model-invocation: true` で、Claude が自分から `/orchestrate` を呼ばないか
+5. （`/pm run` を使うなら）`herdr agent start <名前> --kind claude` で立ち上げた cc に `herdr agent prompt` で `/orchestrate pm <タスク名>` を送って、スキルとして動くか
+6. 子の cc が、確認のダイアログ・AskUserQuestion・裏で build を待っている間を、herdr がそれぞれ `blocked`・`blocked`・`idle` と見分けるか（`herdr agent get <名前>`。`herdr integration install claude` を入れると確かになる）
+7. 複数行の答え（「pm から:」と「## 人の答え」）を `herdr agent prompt` で送って、1 つの入力として子に届くか
 
 cc_harness（iba）では 1〜3 は動いた（2026-11-09）。PJ ごとに一度確かめる。
 
