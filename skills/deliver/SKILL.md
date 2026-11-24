@@ -148,7 +148,7 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
          (cd docs && git push origin <docs-base>)
 
      remote が先に進んでいて断られたら（ほかの作業が先に push した）、`(cd docs && git pull --rebase origin <docs-base>)` で取り込んでからもう一度 push する。
-     docs の作業ツリーにほかのタスクの書きかけがあって `--rebase` が断られた（rebase は作業ツリーが空でないと始まらない）ら、`(cd docs && git pull --no-rebase --no-edit origin <docs-base>)`（マージ。書きかけのファイルに触らない取り込みなら通る。`--no-edit` が無いとマージのメッセージを書くエディタが開き、`claude -p` の中では止まる）で取り込む。ステージに置いた変更があるとマージも断られる（ほかのタスクがコミットしている最中）ので、少しおいて 1 回だけやり直す。それも断られたら、stash せずに止まって出す（書きかけはそのタスクのもの）。
+     docs の作業ツリーにほかのタスクの書きかけがあって `--rebase` が断られた（rebase は作業ツリーが空でないと始まらない）ら、`(cd docs && git pull --no-rebase --no-edit origin <docs-base>)`（マージ。書きかけのファイルに触らない取り込みなら通る。`--no-edit` が無いとマージのメッセージを書くエディタが開き、cc からは閉じられずに止まる）で取り込む。ステージに置いた変更があるとマージも断られる（ほかのタスクがコミットしている最中）ので、少しおいて 1 回だけやり直す。それも断られたら、stash せずに止まって出す（書きかけはそのタスクのもの）。
      push できたら、deliver のコミットのハッシュ（`(cd docs && git rev-parse HEAD)`）を控える。`pull --rebase` するとハッシュが下書きのときと変わるので、この節の 4 で作る app の PR のリンクは、下書きのハッシュではなくこのハッシュで作る
 
 2. app を push する
