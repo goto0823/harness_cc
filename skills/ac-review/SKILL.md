@@ -44,7 +44,7 @@ spec が「何を」、plan が「どう」、build が「作った」。ac-revi
 ### 0. 入口を確かめる（1 つでも満たさなければ止まる）
 - plan.md が `status: approved`。`scale: 小` で plan が無いなら spec が `status: approved`
 - todo.md で、仕上げ（P-n）より前のステップと CP がすべてチェック済み。「spec への差し戻し」に `[ ]` の行が無い（あれば `/spec <タスク名>` が先）
-- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。ベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら ship がそこから `ship/<タスク名>` を切り、`直接 push` ならそのまま push する）
+- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。ベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
 - app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空。未コミットのものはレビューしない。
   `docs/` は app とは別の git リポジトリ（project.md の「置き場」）で、spec・plan・todo・review はそちらに入る
 - この会話で build を回していない。回していたら「新しいセッションで `/ac-review` を」と伝えて止まる
@@ -126,7 +126,7 @@ docs の git 操作はこのサブシェルの形で書く。`-C docs` を付け
 deny はサブシェルや `cd docs && ...` の中のコマンドにも効く（公式ドキュメントで確認）。
 
 コミットしたら、結果（pass / fail、必須と任意の件数、前回との関係）の 3 行に「次」を 1 行足して出して止まる。コードもテストも触らない。「次」は result で決まる:
-- `pass`: 「次は新しいセッションで `/ship <タスク名>`（docs と app の PR。ui-check の OK のスクショは project.md の「PR と課題管理」の方法で添える）」
+- `pass`: 「次は新しいセッションで `/deliver <タスク名>`（docs と app の PR。ui-check の OK のスクショは project.md の「PR と課題管理」の方法で添える）」
 - `fail`: 「次は新しいセッションで `/build fix <タスク名>`」。AC の疑いが 1 件でもあれば「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）。そのあと案内に従って `/build fix <タスク名>` か再レビュー」にする（S-n が `[ ]` のままだと build fix は入口で止まる）
 - 採点が成り立たない: 「直さずに人が確かめる。この回の結果は無効」
 

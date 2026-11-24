@@ -8,7 +8,7 @@ description: "approved な plan と todo（scale: 小 なら approved な spec�
 spec が「何を」、plan が「どう」を決めた。build はそれを **決めたとおりに** 作る。
 新しい判断はしない。判断が要る場面に当たったら、自分で決めずに止まる。
 止まるのは失敗ではない。黙って進んだ分は、あとで人が戻す分になる。
-push と PR はしない。仕上げの `/ship` がやる。
+push と PR はしない。仕上げの `/deliver` がやる。
 ヘッドレスでは `git add -A`・`commit -a`・rebase・amend・stash・push・PR と、受け入れテスト（`docs/accept/`、`tests/Acceptance/`、`scripts/accept.sh`）の読み書きと実行を設定で禁止している。対話でもスキルのルールとして使わない。弾かれたら、別の書き方で回避せずに止まる。
 
 ## モード
@@ -38,7 +38,7 @@ push と PR はしない。仕上げの `/ship` がやる。
 - spec が `status: approved`（中以上でも見る）で、todo.md の「spec への差し戻し」に `[ ]` の行が無い。
   あれば「spec の直しが先」と S-n を示し、「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）」と案内して止まる。spec が `draft` のときも同じ
 - `docs/accept/<タスク名>/accept.md` があるなら `status: approved`。`draft` なら「受け入れテストの承認を先に」と伝えて止まる。無ければそのまま始める（中身は読まない。status の行だけ見る）
-- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` は project.md の「PR の向き先」（app のベースブランチ）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら ship がそこから `ship/<タスク名>` を切り、`直接 push` ならそのまま push する）
+- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` は project.md の「PR の向き先」（app のベースブランチ）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
   - <branch> にいる: そのまま（並行作業で project.md の「並行作業」の始め方で入ったときもここ）
   - `<base>` にいて、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
     <branch> が手元か origin にあれば（`git branch --list <branch>`、`git branch -r --list origin/<branch>`）`git switch <branch>`、
@@ -100,7 +100,7 @@ auto でも聞く。ヘッドレスでは聞けないので 6 の形で止まる
 - 元に戻せない作業が要る（データを消す migration、権限の変更、デプロイ、秘密情報や .env に触る、`git revert` で戻せないもの）
 - plan の「触るファイル」に無いファイルを新しく作る、または振る舞いが変わる変更が要る
 - 確認のコマンドが環境の問題で動かない（DB が落ちている、生成物が無い）。環境は直さない
-- 次が仕上げのステップ。仕上げ（check.sh 全体 → /ui-check → /ac-review → /ship）は人と別セッションの仕事で、build は入らない
+- 次が仕上げのステップ。仕上げ（check.sh 全体 → /ui-check → /ac-review → /deliver）は人と別セッションの仕事で、build は入らない
 
 **（spec のこと）** の印で止まるときは、止まる前に todo.md の「spec への差し戻し」に 1 行足す（6 の申し送りと同じコミットに入れる）:
 `- [ ] S-n <spec に足りない判断・食い違い・おかしい AC。人の裁定があればそれも>（AC-XXX-n、P-n で発覚）`。番号は todo の中で続きから振る。
@@ -132,7 +132,7 @@ todo.md の「申し送り」に 1 行足してから、次の形で出力して
 
 ### 7. 仕上げの前まで終えたとき
 6 と同じ形で出す。理由は「仕上げの前」。「判断してほしいこと」に、人がやる順を書く:
-`scripts/check.sh`（全体）→ 新しいセッションで `/ui-check <タスク名>` → 別セッション（build と別のモデル）で `/ac-review <タスク名>` → pass なら新しいセッションで `/ship <タスク名>`。
+`scripts/check.sh`（全体）→ 新しいセッションで `/ui-check <タスク名>` → 別セッション（build と別のモデル）で `/ac-review <タスク名>` → pass なら新しいセッションで `/deliver <タスク名>`。
 「画面の確認」に「未確認」の行が 1 つでもあれば、「判断してほしいこと」の先頭に「次は新しいセッションで `/ui-check <タスク名>`（app は project.md の「app の起動と URL」のとおり人が上げてから）」と書く。
 未確認が無く、画面に関わる AC も無ければ「`/ui-check` は不要。次は別セッション（build と別のモデル）で `/ac-review <タスク名>`」と書く。
 

@@ -11,7 +11,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 ```
 /arch（最初に 1 回。設計の規約を変えるとき）
 
-/spec → /plan → /accept-test → /build → /ui-check → /ac-review → /ship
+/spec → /plan → /accept-test → /build → /ui-check → /ac-review → /deliver
                                    ↓ 壊れたら
                                 /debug
 ```
@@ -26,8 +26,8 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/debug` | 再現テストで red を見て、根本原因を書いて止まり、「直して」で直す | 新しいセッション |
 | `/ui-check` | 動いている app を Playwright で開いて、画面の AC を確かめ、スクショを残す | 新しいセッション |
 | `/ac-review` | spec と plan に照らして採点し、`docs/review/` に書く。受け入れテストもここで回す | **build と別のモデル** |
-| `/ship` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
-| `/orchestrate` | spec から ship までを、各スキルの新しい会話で順に回す。人は質問に答えるだけ（§8） | 人と対話（人が打ったときだけ） |
+| `/deliver` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
+| `/orchestrate` | spec から deliver までを、各スキルの新しい会話で順に回す。人は質問に答えるだけ（§8） | 人と対話（人が打ったときだけ） |
 
 規模で入口が変わる（`templates/CLAUDE.md` の「規模と進め方」）。
 - 軽微（typo・文言・lint）はスキルを通さず直す。既存のテストで再現できるバグは `/debug`
@@ -210,13 +210,13 @@ docs/
 
 - **git 操作の書き方。** スキル内の docs の git 操作は `(cd docs && git add <path> && git commit -m "...")` の形で書く。
   `-C docs` を付けた git は deny のパターン（`Bash(git add -A*)` など）に一致しないため使わない。deny はサブシェルや `cd docs && ...` の中にも効く（公式ドキュメントで確認）
-- **ブランチ。** build の todo と ac-review のレビューは、手元の docs のベースブランチに積む。出し方は project.md の「docs の出し方」で選ぶ。`PR` なら `/ship` が `ship/<タスク名>` を切って PR にし、docs の remote のベースブランチに直接 push はしない。`直接 push` なら `/ship` がブランチを切らずにベースブランチを push し、docs の PR は作らない
-- **スクショ。** docs には入れない。project.md の「スクショ」の置き場（git 管理外）に置き、PR に要るものは `/ship` が project.md の方法で付ける
+- **ブランチ。** build の todo と ac-review のレビューは、手元の docs のベースブランチに積む。出し方は project.md の「docs の出し方」で選ぶ。`PR` なら `/deliver` が `deliver/<タスク名>` を切って PR にし、docs の remote のベースブランチに直接 push はしない。`直接 push` なら `/deliver` がブランチを切らずにベースブランチを push し、docs の PR は作らない
+- **スクショ。** docs には入れない。project.md の「スクショ」の置き場（git 管理外）に置き、PR に要るものは `/deliver` が project.md の方法で付ける
 - **受け入れテスト。** `docs/accept/<タスク名>/`。app の履歴には入れない。採点のときだけ `scripts/accept.sh` が app にコピーして回す
 
 ### PJ で決めておくこと
-- **docs の出し方（`PR` か `直接 push`）。** docs もレビューするなら `PR`。docs をレビューしない、または worktree で docs を共有して並行作業するなら `直接 push`（`PR` だと ship が docs のブランチを切り替えている間に、ほかのタスクのコミットがその PR に混ざる）。`直接 push` のときは、PR の本文のリンクに使う「docs のファイルの URL」も決める
-- **worktree で並行作業するとき、docs をどう見せるか。** worktree ごとに docs をコピーするなら、そこで積んだコミットは自動では本体に届かない。`/ship` の docs の PR で戻す形にすると、worktree を消す前に回収できる。本体の docs へのシンボリックリンクで共有するなら、回収は要らないが、「docs の出し方」は `直接 push` にする。project.md の「並行作業」に書く
+- **docs の出し方（`PR` か `直接 push`）。** docs もレビューするなら `PR`。docs をレビューしない、または worktree で docs を共有して並行作業するなら `直接 push`（`PR` だと deliver が docs のブランチを切り替えている間に、ほかのタスクのコミットがその PR に混ざる）。`直接 push` のときは、PR の本文のリンクに使う「docs のファイルの URL」も決める
+- **worktree で並行作業するとき、docs をどう見せるか。** worktree ごとに docs をコピーするなら、そこで積んだコミットは自動では本体に届かない。`/deliver` の docs の PR で戻す形にすると、worktree を消す前に回収できる。本体の docs へのシンボリックリンクで共有するなら、回収は要らないが、「docs の出し方」は `直接 push` にする。project.md の「並行作業」に書く
 - **docs の PR のマージのしかた（`PR` のとき）。** squash マージにすると、手元の docs のベースブランチに積んだ todo・review のコミットと、remote のコミットが別物になって分かれる。普通のマージなら `git pull` でそろう
 
 ## 6. Playwright の MCP（ui-check 用）
@@ -259,8 +259,8 @@ examples/                  PJ の見本（今は laravel-vue）
 スキルの中の例（会議室予約の app、`AC-RCR-2` など）は、説明のための架空のもの。
 
 ## 8. オーケストレーション（`/orchestrate`）
-`/orchestrate <タスク名>` で、spec から ship までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
-- spec・plan・debug・ship はサブエージェント（作る側のモデル）、accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
+`/orchestrate <タスク名>` で、spec から deliver までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
+- spec・plan・debug・deliver はサブエージェント（作る側のモデル）、accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
 - build と build fix は `claude -p "/build auto <タスク名>" --settings .claude/headless-build.json --model <作る側>` で回す。§3 の deny は `--settings` で読ませたときだけ効き、サブエージェントには効かないため
 - サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。「## 質問」には、問いのほかに、答えを書く下書きのパスと、問いの材料にした前提の表（内容と根拠の `file:line`）を付ける。オーケストレーターはその表をそのまま画面に出してから AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
 - 状態は全部ファイルにあるので、止まっても `/orchestrate <タスク名>` で続きから再開できる
@@ -269,8 +269,8 @@ examples/                  PJ の見本（今は laravel-vue）
 
 ### 実際に回して分かったこと（cc_harness で 2026-11-09 に 5 本通したとき）
 - ac-review のサブエージェントが、背景で回した `scripts/check.sh` の終わりで止まったまま起きないことがある。プロンプトで「前景で待つ（timeout 600000）。レビューの作成とコミットまで進めて止まらない」と指示する（orchestrate に組み込み済み）
-- ship のサブエージェントが PR の下書きを要約だけで返すことがある。「全文をそのまま返す」と指示する（組み込み済み）
-- ship の「出す」は、同じ ship のエージェントに SendMessage で渡すと、承認した本文がそのまま使われる（組み込み済み）
+- deliver のサブエージェントが PR の下書きを要約だけで返すことがある。「全文をそのまま返す」と指示する（組み込み済み）
+- deliver の「出す」は、同じ deliver のエージェントに SendMessage で渡すと、承認した本文がそのまま使われる（組み込み済み）
 - build が S-n（spec のこと）で止まったら、人の答えを todo に書いてコミットしてから spec の差し戻しへ。差し戻しは fix の周回に数えない
 - サンドボックスでは書ける場所が限られ、build のログを置けないことがある。書ける場所を先に確かめる
 - 所要時間の目安: build は 1 本 15〜25 分、ac-review は 10 分前後

@@ -13,7 +13,7 @@ app の `.claude/project.md` に置き、`<ここに: …>` を PJ の値で埋�
 - docs のリポジトリ: <ここに: spec・plan・todo・review・debug・受け入れテストを置く、app とは別の git リポジトリ。app の `docs/` に clone し、app の `.gitignore` で `/docs/` ごと無視する>
 - PR の向き先（app のベースブランチ）: <ここに: 例 `main`>
 - docs のベースブランチ: <ここに: 例 `main`。build の todo と ac-review のレビューは手元のこのブランチに積む>
-- docs の出し方: <ここに: `PR` か `直接 push`。`PR` は `/ship` が `ship/<タスク名>` を切って docs の PR を出す（docs もレビューする PJ 向け）。`直接 push` は `/ship` がブランチを切らずにベースブランチへ push し、docs の PR は作らない（docs をレビューしない PJ、docs を共有して並行作業する PJ 向け。ship の最中に他のタスクが docs にコミットしても混ざらない）>
+- docs の出し方: <ここに: `PR` か `直接 push`。`PR` は `/deliver` が `deliver/<タスク名>` を切って docs の PR を出す（docs もレビューする PJ 向け）。`直接 push` は `/deliver` がブランチを切らずにベースブランチへ push し、docs の PR は作らない（docs をレビューしない PJ、docs を共有して並行作業する PJ 向け。deliver の最中に他のタスクが docs にコミットしても混ざらない）>
 - docs のファイルの URL: <ここに: `直接 push` のときに要る。コミットとパスから docs のファイルを開く URL の形。例 `https://github.com/owner/docs/blob/<ハッシュ>/<パス>`。`PR` なら「なし」でよい>
 - 設計書: <ここに: 例 `docs/design/`。無ければ「なし」（`/arch <層>` で書ける）>
 - ディレクトリごとの CLAUDE.md: <ここに: 例 `app/CLAUDE.md` → `docs/design/backend.md`、`tests/CLAUDE.md` → テストの書き方の決まり。無ければ「なし」。雛形は harness_cc の `templates/dir-CLAUDE.md`>
@@ -68,7 +68,7 @@ ui-check が使う。
 | <ここに: 手元の開発環境の確認用アカウントだけ> | | | |
 
 ## スクショ
-ui-check が撮り、ac-review と ship が使う。
+ui-check が撮り、ac-review と deliver が使う。
 - 置き場（git 管理外。本体と worktree で同じ場所）: <ここに: 例 app の 1 つ上の `local/screenshots/`。Playwright の MCP は Claude Code を起動したディレクトリの下にしか書けないので、その下にする>
 - 記録に書くパスの基準: <ここに: 例 「置き場の 1 つ上からの相対 `local/screenshots/<タスク名>/<ファイル名>`」>
 - app のセッションから開くとき: <ここに: 例 `../local/screenshots/...`>
@@ -77,7 +77,7 @@ ui-check が撮り、ac-review と ship が使う。
 worktree などで、同時に 2 つ以上のタスクを進めるとき。
 - 始め方: <ここに: 例 `git worktree add ../<branch> -b <branch>`。並行作業しないなら「なし」>
 - 終わり方: <ここに>
-- worktree の中の docs: <ここに: worktree で docs がどう見えるか（コピーか、本体の docs へのシンボリックリンクで共有か）、積んだコミットを本体の docs にどう戻すか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと ship が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）>
+- worktree の中の docs: <ここに: worktree で docs がどう見えるか（コピーか、本体の docs へのシンボリックリンクで共有か）、積んだコミットを本体の docs にどう戻すか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）>
 
 ## PR と課題管理
 - PR を作るコマンド: <ここに: 例 `gh pr create --base <ベース> --head <branch> --title "<タイトル>" --body-file <本文のファイル>`>

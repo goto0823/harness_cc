@@ -1,21 +1,21 @@
 ---
 name: orchestrate
-description: "1 つのタスクを spec から ship まで、各スキルを新しい会話（サブエージェントか `claude -p`）で順に回す。人は質問に答えるだけにする。`/orchestrate <タスク名>` で呼ぶ（新しいタスクなら `/orchestrate <タスク名> <やりたいこと>`）。途中で止まっても、同じコマンドでファイルの状態から続きを再開する。中身（コード・テスト・spec の判断）は読まず、決めない。人が打ったときだけ使う。"
+description: "1 つのタスクを spec から deliver まで、各スキルを新しい会話（サブエージェントか `claude -p`）で順に回す。人は質問に答えるだけにする。`/orchestrate <タスク名>` で呼ぶ（新しいタスクなら `/orchestrate <タスク名> <やりたいこと>`）。途中で止まっても、同じコマンドでファイルの状態から続きを再開する。中身（コード・テスト・spec の判断）は読まず、決めない。人が打ったときだけ使う。"
 disable-model-invocation: true
 ---
 
 # orchestrate — スキルを順に回し、人には質問だけ出す
 
-spec・plan・accept-test・build・ui-check・ac-review・ship は、それぞれ別の会話で動かす前提で作ってある。
+spec・plan・accept-test・build・ui-check・ac-review・deliver は、それぞれ別の会話で動かす前提で作ってある。
 人がやっていた「`/clear` → 次のスキルを打つ → ペインを行き来する」を、このスキルが代わりにやる。
 **このスキルは判断しない。** 次に何を回すかはファイルの状態と各スキルの「次」の行で決め、人の判断が要るものは全部質問にする。
 中身（コード、テスト、受け入れテスト、レビューの当否）を読むと、作る側と審判の両方の考えを持つことになり、会話を分けた意味が無くなる。
 
 ## 人が応答できない環境では使わない
-ヘッドレス（`claude -p`）では使わない。質問に答える人がいないと、承認も ship の「出す」も通らない。
+ヘッドレス（`claude -p`）では使わない。質問に答える人がいないと、承認も deliver の「出す」も通らない。
 
 ## 設定（変えるときはここだけ直す）
-- 作る側のモデル（spec・plan・build・build fix・debug・ship）: `opus`
+- 作る側のモデル（spec・plan・build・build fix・debug・deliver）: `opus`
 - 審判側のモデル（accept-test・ui-check・ac-review）: `fable`。作る側と同じにしない
 - fail → build fix → 再レビューの周回の上限: **2 周**。超えたら人に聞く
 - build のログの置き場: app のルート直下の `local/orchestrate/<タスク名>/`（git 管理外。app の `.gitignore` に `/local/` を入れておく）。サンドボックスで書けなければ、書ける場所を人に聞く
@@ -23,7 +23,7 @@ spec・plan・accept-test・build・ui-check・ac-review・ship は、それぞ�
 ## 回し方（どこで動かすか）
 | スキル | 動かし方 | モデル |
 |---|---|---|
-| spec・plan・debug・ship | サブエージェント（Agent ツール。`model` に作る側） | 作る側 |
+| spec・plan・debug・deliver | サブエージェント（Agent ツール。`model` に作る側） | 作る側 |
 | accept-test・ui-check・ac-review | サブエージェント（Agent ツール。`model` に審判側） | 審判側 |
 | build・build fix | `claude -p` を Bash で（下の形） | 作る側 |
 
@@ -41,7 +41,7 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
     orchestrate から: /<スキル> <タスク名>（<モード>）
     このスキルの「オーケストレーターから呼ばれたとき」に従う。AskUserQuestion は使わず、聞くことは「## 質問」の形で返して止まる。
     （ac-review のとき）scripts/check.sh は背景に回さず前景で待つ（timeout 600000）。終わったらレビューの作成とコミットまで進めて止まらない。
-    （ship のとき）app PR（docs の出し方が `PR` なら docs PR も）のタイトルと本文の全文を、要約せずにそのまま返す。
+    （deliver のとき）app PR（docs の出し方が `PR` なら docs PR も）のタイトルと本文の全文を、要約せずにそのまま返す。
     （人の答えがあるときだけ）
     ## 人の答え
     - Q1: <問い> → <選ばれた答え。Other ならその文>（書く先: <ファイルと節>）
@@ -53,7 +53,7 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
 - 前提の表や根拠が無いまま問いが返ってきても、自分で補わない。そのまま聞き、問いの前に「根拠の表が返ってこなかった。要るなら『根拠を出して』と答えてください」と添える（Other でそう答えられたら、同じスキルに「## 人の答え」でそのまま渡す）
 - 1 回に 4 問まで。5 問以上返ってきたら分けて聞く
 - 答えは、同じスキルの次のサブエージェントに「## 人の答え」で渡す。答えをファイルに書くのはサブエージェント（このスキルは書かない。例外は下の build の 2 つだけ）
-- ship の「出す」の答えは、新しいサブエージェントでなく、下書きを返した同じ ship のエージェントに SendMessage で渡す（承認した本文がそのまま使われる）
+- deliver の「出す」の答えは、新しいサブエージェントでなく、下書きを返した同じ deliver のエージェントに SendMessage で渡す（承認した本文がそのまま使われる）
 - このスキルが自分から聞くのは、下の「止まって聞く」に書いたものだけ
 
 ## 進め方
@@ -78,14 +78,14 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
 | 「画面の確認」に頭が `未確認` か `期待と違う` の行がある | ui-check（入る前に「app は上がっていますか（project.md の「app の起動と URL」）」を聞く） |
 | 最新のレビューが無い、または `head:` が `git rev-parse HEAD` と違う | ac-review |
 | 最新のレビューが `result: fail` | build（fix）。AC の疑いで S-n が付いていれば spec（差し戻し） |
-| 最新のレビューが `result: pass` で、まだ出していない（下の「出したかの見分け方」） | ship |
+| 最新のレビューが `result: pass` で、まだ出していない（下の「出したかの見分け方」） | deliver |
 | 出してある | 終わり（6） |
 
 出したかの見分け方は、project.md の「docs の出し方」で分かれる（無い・`<ここに: …>` のままなら `PR`）:
-- `PR`: docs に `ship/<タスク名>` ブランチがあれば出してある（`(cd docs && git branch --list ship/<タスク名>)`）。ship の PR 番号は `ship/<タスク名>` 側の todo にあり、docs のベースブランチには無い
-- `直接 push`: todo の申し送りの ship の行に app の PR の番号があれば出してある。ship の行が「下書き」のままなら、ship が下書きで止まっている（ship を回す。ship の入口が聞いて止まる）
+- `PR`: docs に `deliver/<タスク名>` ブランチがあれば出してある（`(cd docs && git branch --list deliver/<タスク名>)`）。deliver の PR 番号は `deliver/<タスク名>` 側の todo にあり、docs のベースブランチには無い
+- `直接 push`: todo の申し送りの deliver の行に app の PR の番号があれば出してある。deliver の行が「下書き」のままなら、deliver が下書きで止まっている（deliver を回す。deliver の入口が聞いて止まる）
 
-読むのは、frontmatter の `status`・`scale`、project.md の「docs の出し方」、docs のブランチの一覧、todo の `- [ ]` / `- [x]` の行と「画面の確認」の行の頭と ship の行、レビューの 1〜2 行目と `head:`、build のログの「## build 停止」の節だけ。
+読むのは、frontmatter の `status`・`scale`、project.md の「docs の出し方」、docs のブランチの一覧、todo の `- [ ]` / `- [x]` の行と「画面の確認」の行の頭と deliver の行、レビューの 1〜2 行目と `head:`、build のログの「## build 停止」の節だけ。
 
 ### 2. 回す
 1 で決めたスキルを、「回し方」の表のとおりに動かす。返ってきた出力で分ける:
@@ -119,7 +119,7 @@ build は `claude -p` なので人に聞けない。止まったら、ログの�
 - 選択肢は「回し直す／ここで止める」などに限る。stash・破棄・force・push を選択肢にしない
 
 ### 6. 終わったら
-ship が終わったら、ship の出力（app PR の URL、`PR` なら docs PR の URL とマージの順番、`直接 push` なら push した docs のハッシュ）をそのまま出して止まる。
+deliver が終わったら、deliver の出力（app PR の URL、`PR` なら docs PR の URL とマージの順番、`直接 push` なら push した docs のハッシュ）をそのまま出して止まる。
 途中で止めたときは、どこまで回したか（スキルと結果の一覧）と、再開のコマンド `/orchestrate <タスク名>` を出して止まる。
 
 ## よくある言い訳
