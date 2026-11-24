@@ -73,7 +73,7 @@ build はこのテストを見ない。テストが勝手に決めた URL・パ�
 ### 0. 入口を確かめる（1 つでも満たさなければ止まる）
 - spec が `status: approved`。中以上なら plan も `status: approved` で、plan.md に「外の約束」の節がある（無ければ「plan に外の約束の節を足して」と伝えて止まる）
 - todo.md があれば、「spec への差し戻し」に `[ ]` の行が無い。あれば「先に `/spec <タスク名>` で S-n を直して」と伝えて止まる
-- build が始まっていない: `docs/plan/<タスク名>-todo.md` の作業順に `[x]` が無い（todo が無ければそれでよい）。app のブランチがあるなら `git log origin/<base>..HEAD`（`<base>` は project.md の「PR の向き先」）が空
+- build が始まっていない: `docs/plan/<タスク名>-todo.md` の作業順に `[x]` が無い（todo が無ければそれでよい）。app のブランチがあるなら `git log origin/<base>..HEAD`（`<base>` は spec の `base:`。無ければ project.md の「PR の向き先」）が空
 - `docs/accept/<タスク名>/accept.md` が `approved` でない。`draft` があれば続きから
 - spec が `scale: 小` なのに、AC を確かめるのに新しい URL・ルート・列・エラーコードが要る → 書かずに止まり、「中以上にして plan の『外の約束』で決めて」と伝える。小の受け入れテストは既存の約束だけで書く
 - この会話で build も plan も回していない。回していたら「新しいセッションで」と伝えて止まる
@@ -127,7 +127,7 @@ plan の「外の約束」が足りないだけ（「plan に次の約束を足�
 
 ### 6. 「確定」と言われたら（5 の質問で「確定する」を選ばれたときも）
 accept.md を `status: approved` にして docs でコミットし、「次は新しいセッション（accept-test と別のモデル）で `/build <タスク名>`。採点は別セッションの `/ac-review <タスク名>` が `scripts/accept.sh` で回す」と伝えて止まる。
-伝える前に **build の入口を確かめる**: spec（中以上なら plan も）が docs でコミット済みで `(cd docs && git status --porcelain)` が空、app の `git status --porcelain` が空、app がベースブランチ（project.md の「PR の向き先」）か `feat/<タスク名>`（plan があれば `branch:` のブランチ）にいる（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る。ベースブランチなら build が入口でブランチを作る。docs は docs のベースブランチのままでよい）。足りないものは「`/build` の前に <これ>」と列挙して渡す。approved 済みの spec が未コミットなら docs でコミットしてよい。ブランチはこのスキルでは切り替えない（build がやる）。小で todo が無いのは足りないものではない（build が作る）
+伝える前に **build の入口を確かめる**: spec（中以上なら plan も）が docs でコミット済みで `(cd docs && git status --porcelain)` が空、app の `git status --porcelain` が空、app がベースブランチ（spec の `base:` か、既定の project.md の「PR の向き先」）か `feat/<タスク名>`（plan があれば `branch:` のブランチ）にいる（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る。ベースブランチなら build が入口でブランチを作る。docs は docs のベースブランチのままでよい）。足りないものは「`/build` の前に <これ>」と列挙して渡す。approved 済みの spec が未コミットなら docs でコミットしてよい。ブランチはこのスキルでは切り替えない（build がやる）。小で todo が無いのは足りないものではない（build が作る）
 **以後このスキルもテストを書き換えない。** 変えてよいのは、spec か plan の約束が変わったとき（決定ログ → draft → 再承認）と、テストのミス（約束の読み違い）が採点で見つかったときだけ。どちらも accept.md を `draft` に戻し、「変更ログ」に理由を書いてから直し、再承認を求める。
 人が応答できない環境（ヘッドレス）では draft までで止まる。approved にするのは人の仕事。
 

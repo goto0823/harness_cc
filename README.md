@@ -211,6 +211,7 @@ docs/
 - **git 操作の書き方。** スキル内の docs の git 操作は `(cd docs && git add <path> && git commit -m "...")` の形で書く。
   `-C docs` を付けた git は deny のパターン（`Bash(git add -A*)` など）に一致しないため使わない。deny はサブシェルや `cd docs && ...` の中にも効く（公式ドキュメントで確認）
 - **ブランチ。** build の todo と ac-review のレビューは、手元の docs のベースブランチに積む。出し方は project.md の「docs の出し方」で選ぶ。`PR` なら `/deliver` が `deliver/<タスク名>` を切って PR にし、docs の remote のベースブランチに直接 push はしない。`直接 push` なら `/deliver` がブランチを切らずにベースブランチを push し、docs の PR は作らない
+- **app の PR の向き先。** タスクごとに spec の frontmatter の `base:` で決める（`/spec` が「置いた仮定」で確かめる）。無ければ project.md の「PR の向き先」（既定）。build は `origin/<base>` から切り、ac-review は `<base>` との差分を採点し、deliver は `<base>` に PR を出す。3 つが同じ値を読むので、PR に別のブランチのコミットが混ざらない。build が始まったら `base:` は変えない（deliver が入口で起点のずれを見て止まる）。deliver は最後に app を既定の「PR の向き先」に戻す
 - **スクショ。** docs には入れない。project.md の「スクショ」の置き場（git 管理外）に置き、PR に要るものは `/deliver` が project.md の方法で付ける
 - **受け入れテスト。** `docs/accept/<タスク名>/`。app の履歴には入れない。採点のときだけ `scripts/accept.sh` が app にコピーして回す
 

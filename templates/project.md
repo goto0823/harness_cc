@@ -11,7 +11,7 @@ app の `.claude/project.md` に置き、`<ここに: …>` を PJ の値で埋�
 ## 置き場
 - app のリポジトリ: <ここに: 例 `owner/app`>
 - docs のリポジトリ: <ここに: spec・plan・todo・review・debug・受け入れテストを置く、app とは別の git リポジトリ。app の `docs/` に clone し、app の `.gitignore` で `/docs/` ごと無視する>
-- PR の向き先（app のベースブランチ）: <ここに: 例 `main`>
+- PR の向き先（app のベースブランチ）: <ここに: 例 `main`。既定の値。タスクごとに変えるなら `/spec` が聞いて spec の `base:` に書き、build・ac-review・deliver はそちらを使う（hotfix だけ `main`、リリース前の修正は `release/1.2` など）。deliver は最後に app をこのブランチに戻す>
 - docs のベースブランチ: <ここに: 例 `main`。build の todo と ac-review のレビューは手元のこのブランチに積む>
 - docs の出し方: <ここに: `PR` か `直接 push`。`PR` は `/deliver` が `deliver/<タスク名>` を切って docs の PR を出す（docs もレビューする PJ 向け）。`直接 push` は `/deliver` がブランチを切らずにベースブランチへ push し、docs の PR は作らない（docs をレビューしない PJ、docs を共有して並行作業する PJ 向け。deliver の最中に他のタスクが docs にコミットしても混ざらない）>
 - docs のファイルの URL: <ここに: `直接 push` のときに要る。コミットとパスから docs のファイルを開く URL の形。例 `https://github.com/owner/docs/blob/<ハッシュ>/<パス>`。`PR` なら「なし」でよい>
