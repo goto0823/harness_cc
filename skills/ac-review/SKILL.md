@@ -44,11 +44,11 @@ spec が「何を」、plan が「どう」、build が「作った」。ac-revi
 ### 0. 入口を確かめる（1 つでも満たさなければ止まる）
 - plan.md が `status: approved`。`scale: 小` で plan が無いなら spec が `status: approved`
 - todo.md で、仕上げ（P-n）より前のステップと CP がすべてチェック済み。「spec への差し戻し」に `[ ]` の行が無い（あれば `/spec <タスク名>` が先）
-- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。ベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
+- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。このタスクのベースブランチ（spec の `base:`。無ければ project.md の「PR の向き先」。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
 - app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空。未コミットのものはレビューしない。
   `docs/` は app とは別の git リポジトリ（project.md の「置き場」）で、spec・plan・todo・review はそちらに入る
 - この会話で build を回していない。回していたら「新しいセッションで `/ac-review` を」と伝えて止まる
-- 比べる起点を出す。ベースは project.md の「PR の向き先」（以下 `<base>`）。
+- 比べる起点を出す。ベースは `<base>`（spec の `base:`。無ければ project.md の「PR の向き先」）。
   `git fetch origin <base>` してから `git merge-base origin/<base> HEAD`。fetch できないときは手元の `<base>` で代用し、その旨をレビューに書く
 
 ### 1. 読む（この順で）

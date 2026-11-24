@@ -38,12 +38,13 @@ push と PR はしない。仕上げの `/deliver` がやる。
 - spec が `status: approved`（中以上でも見る）で、todo.md の「spec への差し戻し」に `[ ]` の行が無い。
   あれば「spec の直しが先」と S-n を示し、「次は新しいセッションで `/spec <タスク名>`（差し戻し S-n を直す）」と案内して止まる。spec が `draft` のときも同じ
 - `docs/accept/<タスク名>/accept.md` があるなら `status: approved`。`draft` なら「受け入れテストの承認を先に」と伝えて止まる。無ければそのまま始める（中身は読まない。status の行だけ見る）
-- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` は project.md の「PR の向き先」（app のベースブランチ）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
+- app のブランチ（app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）で見る）。<branch> は plan.md の `branch:`。小なら `feat/<タスク名>`。`<base>` はこのタスクのベースブランチ（spec の frontmatter の `base:`。無ければ project.md の「PR の向き先」）。<default> は既定のベースブランチ（project.md の「PR の向き先」）。docs のブランチは見ない（docs は docs のベースブランチのままが正しい。project.md の「docs の出し方」が `PR` なら deliver がそこから `deliver/<タスク名>` を切り、`直接 push` ならそのまま push する）
   - <branch> にいる: そのまま（並行作業で project.md の「並行作業」の始め方で入ったときもここ）
-  - `<base>` にいて、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
+  - `<base>` か <default> にいて、app の `git status --porcelain` が空: **build が入る**。`git fetch origin` のあと、
+    `origin/<base>` が無ければ（`git branch -r --list origin/<base>` が空）「spec の `base:` のブランチが origin に無い」と伝えて止まる。
     <branch> が手元か origin にあれば（`git branch --list <branch>`、`git branch -r --list origin/<branch>`）`git switch <branch>`、
-    どちらにも無ければ `git switch -c <branch> origin/<base>`。入ったら、停止の出力の「ここまで」に「ブランチ <branch> を作った／に入った」と書く
-  - `<base>` にいて、app に未コミットの変更がある: 止まって聞く（次の項目と同じ）。stash も破棄もしない
+    どちらにも無ければ `git switch -c <branch> origin/<base>`（今いるブランチでなく、`origin/<base>` を名指しで起点にする）。入ったら、停止の出力の「ここまで」に「ブランチ <branch> を <base> から作った／に入った」と書く
+  - `<base>` か <default> にいて、app に未コミットの変更がある: 止まって聞く（次の項目と同じ）。stash も破棄もしない
   - 別のブランチにいる: 別のタスクの途中かもしれないので、止まって聞く。切り替えない
 - app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空。関係ない変更があれば止まって聞く。stash も破棄もしない。
   `docs/` は app とは別の git リポジトリ（project.md の「置き場」）で、spec・plan・todo・review はそちらに入る
@@ -194,7 +195,8 @@ fix(rcr): R1-3 空白だけの理由を trim してから判定する
 - green の間にテストのミス以外を書き換えた
 - `git add -A` / `git add .` を打った。todo のチェックを docs リポジトリでコミットしなかった
 - push、PR、force push、rebase など、履歴を書き換える・外に出す操作をした
-- 入口で `<base>` と <branch> 以外のブランチから切り替えた。未コミットの変更があるのに切り替えた
+- 入口で `<base>`・<default>・<branch> 以外のブランチから切り替えた。未コミットの変更があるのに切り替えた
+- `origin/<base>` でなく、今いるブランチを起点に <branch> を切った（<default> にいるとき、spec の `base:` と違うところから切ってしまう）
 - 禁止されたコマンドを、別の書き方で回避しようとした（`git add -A` を `git add .` に、`--force` を `+refspec` に、など）
 - 自分の実装をレビューして合格扱いにした
 - コードを変えていないのに同じ確認コマンドを繰り返した

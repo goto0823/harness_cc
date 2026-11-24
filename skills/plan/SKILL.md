@@ -59,7 +59,7 @@ spec とのずれが見つかったら推測で吸収せず、ずれを列挙し
   - todo.md に「作業順」が無い（差し戻しの節だけ）なら、新しく書く扱いにする。「spec への差し戻し」の行はそのまま残す
   - spec の差し戻し（`[x] S-n`）を受けた見直しなら、plan.md を `draft` に戻して直し、再承認をもらう。todo の済んだチェック・申し送り・「spec への差し戻し」の行は消さない
 - spec を読み直す。特に AC、境界、決定ログ、「次のセッションが最初に読むもの」
-- ブランチは見ない。app がベースブランチ（project.md の「PR の向き先」）にいても止まらない（plan は docs に書くだけ。app のブランチは build が入口で作る）
+- ブランチは見ない。app がベースブランチ（spec の `base:` か project.md の「PR の向き先」）にいても止まらない（plan は docs に書くだけ。app のブランチは build が入口で作る）
 
 ### 1. 読む
 - `.claude/project.md`（検査、1 本だけ回す、外の約束の種類、並行作業）
@@ -110,7 +110,7 @@ spec とのずれが見つかったら推測で吸収せず、ずれを列挙し
 plan.md を `status: approved` にし、`updated` を更新して docs でコミットし
 （`(cd docs && git add plan/<タスク名>-plan.md && git commit -m "docs(<略号>): plan <タイトル>（approved）")`）、次を伝えて止まる:
 「受け入れテストを作るなら、次は別セッション（build と別のモデル）で `/accept-test <タスク名>`。その承認後に新しいセッションで `/build <タスク名>`。作らないなら、次は新しいセッションで `/build <タスク名>`。作るかどうかは CLAUDE.md の規模の表で決める（中以上は作る）。入り方は plan の冒頭の『使い方』」
-ブランチは build が入口で作る（app がベースブランチ（project.md の「PR の向き先」。以下 `<base>`）で作業ツリーが空なら、plan の `branch:` を `origin/<base>` から切る）ので、人は切り替えなくてよい。
+ブランチは build が入口で作る（app がこのタスクのベースブランチ（spec の `base:`。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」）にいて作業ツリーが空なら、plan の `branch:` を `origin/<base>` から切る）ので、人は切り替えなくてよい。
 並行作業で worktree を使うときだけ、「`/build` の前に project.md の「並行作業」の始め方で `<branch>` に入る」と添える。plan は自分でブランチを切り替えない
 
 ### 7. 実装中に plan が変わるとき
@@ -157,7 +157,7 @@ updated: YYYY-MM-DD
 # plan: <タイトル>
 
 ## 使い方（実装するセッションへ）
-- spec（approved）・この plan・todo を読んでから始める。`docs/accept/<タスク名>/accept.md` があるなら approved になってから。並行作業なら project.md の「並行作業」の始め方で入る。そうでなければ、build が入口でベースブランチから `branch:` を切る
+- spec（approved）・この plan・todo を読んでから始める。`docs/accept/<タスク名>/accept.md` があるなら approved になってから。並行作業なら project.md の「並行作業」の始め方で入る。そうでなければ、build が入口で spec の `base:` から `branch:` を切る
 - 新しい URL・項目名・画面に渡すデータの名前・列は、この plan の「外の約束」にあるものだけを使う。無いものが要ったら、決めずに止まって聞く（accept-test も同じ約束でテストを書いている）
 - todo の順に 1 ステップずつ。1 ステップ = 1 コミット（触ったファイルだけを add）。todo のチェック更新は docs リポジトリで別にコミット（docs は app とは別の git リポジトリ）
 - 各ステップの終わりに `scripts/check.sh --quick`。チェックポイント（CP-n）では全体の `scripts/check.sh`

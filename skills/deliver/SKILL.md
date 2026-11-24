@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: "ac-review が pass にしたブランチを外に出す。docs の更新・todo・review を project.md の「docs の出し方」で出し（`PR` なら docs リポジトリで `deliver/<タスク名>` ブランチを切って push → PR、`直接 push` なら docs のベースブランチにコミットして push）、app のブランチを push → PR（ui-check のスクショは project.md の方法で添付）まで。`/deliver <タスク名>` で呼ぶ。最新のレビューが `result: pass` になったあと、「PR 出して」「deliver して」「ship して」「出荷して」「仕上げて」と言われたときに使う。PR の下書きを見せて止まり、「出して」と言われてから push する。コードは直さない（直すのは `/build fix`）。レビューが fail・未実施のもの、レビューのあとにコミットが増えたものには使わない。"
+description: "ac-review が pass にしたブランチを外に出す。docs の更新・todo・review を project.md の「docs の出し方」で出し（`PR` なら docs リポジトリで `deliver/<タスク名>` ブランチを切って push → PR、`直接 push` なら docs のベースブランチにコミットして push）、app のブランチを push → PR（向き先は spec の `base:`。無ければ project.md の「PR の向き先」。ui-check のスクショは project.md の方法で添付）まで。`/deliver <タスク名>` で呼ぶ。最新のレビューが `result: pass` になったあと、「PR 出して」「deliver して」「ship して」「出荷して」「仕上げて」と言われたときに使う。PR の下書きを見せて止まり、「出して」と言われてから push する。コードは直さない（直すのは `/build fix`）。レビューが fail・未実施のもの、レビューのあとにコミットが増えたものには使わない。"
 ---
 
 # deliver — pass になったものを、そのまま外に出す
@@ -69,7 +69,10 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 - **レビューの `head:` と `git rev-parse HEAD` が一致する。** 違えば、レビューのあとに積んだコミットを誰も採点していない。
   「次は別セッションで `/ac-review <タスク名>`」と伝えて止まる。小さな直しでも進めない
 - app と docs（`(cd docs && git status --porcelain)`）の両方で `git status --porcelain` が空
-- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。ベースブランチ（project.md の「PR の向き先」）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは下の行で別に見る
+- app の cwd で打った `git branch --show-current`（`(cd docs && ...)` の中ではない）が plan.md の `branch:`（<branch>。小なら `feat/<タスク名>`）と一致している。このタスクのベースブランチ（spec の `base:`。無ければ project.md の「PR の向き先」。以下 `<base>`）か既定のベースブランチ（project.md の「PR の向き先」。以下 <default>）にいて app の `git status --porcelain` が空、<branch> が手元にあれば `git switch <branch>` で入ってから続ける。<branch> が無い（build が回っていない）か、別のブランチにいるなら止まる。docs のブランチは下の行で別に見る
+- **PR の向き先が、採点した起点と同じ。** レビューの `base:` の行の括弧の中が `origin/<base>` で、`git fetch origin <base>` のあと
+  `git rev-list --count origin/<base>..HEAD` が `git rev-list --count <レビューの base のハッシュ>..HEAD` と同じ。
+  括弧の中が違えば、レビューのあとに spec の `base:` が変わった。数が多ければ、<branch> が `<base>` 以外から切ってある（PR に別のブランチのコミットが混ざる）。どちらも数と両方のブランチ名を出して、人に聞いて止まる。rebase で直さない
 - todo.md で、仕上げ（P-n）より前のステップと CP がすべてチェック済み。「spec への差し戻し」に `[ ]` の行が無い
 - todo の「画面の確認」に、頭が `未確認` か `期待と違う` の行が無い。あれば「次は新しいセッションで `/ui-check <タスク名>`」と伝えて止まる
 - レビューの「AC の照合」の ui-check の列に `未実施`（`未実施（再確認）`・`未実施（行が無い）` を含む）が無い。行が欠けた画面の AC は「画面の確認」を見ても分からないので、こちらで拾う。あれば `/ui-check <タスク名>` に戻して止まる（ac-review は行の欠落を参考にするだけなので、pass でもここに残りうる）
@@ -118,6 +121,7 @@ push と PR は外から見える操作で、取り消しがききにくい。�
 
 ### 4. PR の下書きを見せて、止まる
 app の PR（【PR】なら docs の PR も）の本文を「出力テンプレート」の形で書いて見せる。あわせて次を出す:
+- app の PR の向き先: `<base>`（spec の `base:`。既定の <default> と違うなら、そう書く）
 - push するもの: app の `<branch>`（コミット数。`git log --oneline origin/<base>..HEAD`）と、docs の
   - 【PR】`deliver/<タスク名>`（コミット数）
   - 【直接 push】`<docs-base>`（`(cd docs && git log --oneline origin/<docs-base>..HEAD)` のコミット数。ほかのタスクの未 push のコミットも一緒に出るので、その数も分けて書く）
@@ -131,7 +135,7 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 ### 5. 「出して」と言われたら（4 の質問で「出す」を選ばれたときも）
 この順で、**1 つのターンで**最後まで進める（添付を「上げる」と「付ける」が分かれている PR の仕組みでは、上げたまま付けずに置くと消えることがある。上げたら同じターンで付ける）。
 途中で失敗したら、そこで止まり、どこまで済んだかを出す。済んだものはやり直さない。
-コマンドは project.md の「PR と課題管理」のもの。以下の `<docs-base>` は project.md の「docs のベースブランチ」、`<base>` は「PR の向き先」。
+コマンドは project.md の「PR と課題管理」のもの。以下の `<docs-base>` は project.md の「docs のベースブランチ」、`<base>` は spec の `base:`（無ければ「PR の向き先」）、<default> は「PR の向き先」。
 
 1. docs を出す
    - 【PR】push して、docs の PR を作る（base は `<docs-base>`）
@@ -165,7 +169,7 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 
    【PR】push 先は `deliver/<タスク名>`。【直接 push】push 先は `<docs-base>`。断られたら 1 と同じく `pull --rebase` してからもう一度 push する
 
-7. ベースブランチに戻す（次の build は `<base>` から新しいブランチを切る）
+7. ベースブランチに戻す（次の build は、次のタスクの spec の `base:` から新しいブランチを切る。app は既定の <default> に戻す）
    - 【PR】docs も戻す（次のタスクの spec が `deliver/<タスク名>` にコミットしないように）
 
          (cd docs && git switch <docs-base>)
@@ -173,9 +177,9 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
    - 【直接 push】docs はベースブランチのままなので何もしない
    - app
 
-         git switch <base>
+         git switch <default>
 
-   app は本体のときだけ戻す。worktree（`git rev-parse --git-dir` と `git rev-parse --git-common-dir` が違う）なら app はそのまま（`<base>` は本体で使われていて入れない。project.md の「並行作業」の終わり方で片づく）。【PR】docs は worktree でも戻す。
+   app は本体のときだけ戻す。worktree（`git rev-parse --git-dir` と `git rev-parse --git-common-dir` が違う）なら app はそのまま（<default> は本体で使われていて入れない。project.md の「並行作業」の終わり方で片づく）。【PR】docs は worktree でも戻す。
    push のあとなので、app の作業ツリーと（【PR】の）docs の作業ツリーは空のはず。空でなければ戻さずに止まって出す
 
 ### 6. 終わったら
@@ -273,6 +277,8 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 ## Red Flags
 - 人の「出して」の前に push した、スクショを上げた、PR を作った
 - レビューの `head:` と HEAD が違うのに進めた
+- app の PR を、spec の `base:` でなく project.md の「PR の向き先」に向けた（`base:` が無い spec のときだけ project.md）。採点した起点と違うブランチに向けた
+- 起点がずれているのを、rebase や cherry-pick で直した
 - コードやテストを書き換えた。spec・plan を書き換えた（status を変えたのも含む）
 - 【PR】docs のベースブランチに直接コミットした。`deliver/<タスク名>` 以外に push した
 - 【直接 push】docs でブランチを切った・切り替えた。`<docs-base>` 以外に push した。pull できないからと stash した
@@ -288,6 +294,7 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 
 ## 確認項目（下書きを見せる前に）
 - 最新のレビューが pass で、`head:` が HEAD と一致しているか
+- app の PR の向き先が spec の `base:`（無ければ project.md の「PR の向き先」）で、レビューの `base:` の `origin/<base>` と同じか
 - app と docs の作業ツリーが空で、docs は【PR】`deliver/<タスク名>`【直接 push】`<docs-base>` にいるか
 - docs のコミットに入れたのが、spec の「docs:」の文書と todo だけか。spec・plan を変えていないか
 - app の PR 本文の各欄に出典（spec・review・todo）があるか。spec・plan・review がローカルのパスではなく docs リポジトリ上のリンクか。「AC の対応」にすべての AC が 1 行ずつあるか
@@ -298,4 +305,5 @@ app の PR（【PR】なら docs の PR も）の本文を「出力テンプレ�
 - 【PR】docs と app の PR が 1 つずつできていて、app の本文に docs の PR が、todo に両方の番号があるか
 - 【直接 push】app の PR が 1 つできていて、`(cd docs && git log --oneline origin/<docs-base>..HEAD)` が空（push しきった）で、todo に app の PR の番号があるか。app の本文のリンクが push したハッシュで開けるか
 - app の PR の添付の件数が、選んだ枚数と一致しているか
+- app の PR の向き先（base）が `<base>` になっているか
 - 最後の出力に「次」（【PR】docs を先にマージ、マージ後の後片付け）があるか
