@@ -94,7 +94,7 @@ spec とのずれが見つかったら推測で吸収せず、ずれを列挙し
 - **「先に聞く」に当たるステップには印を付ける**（CLAUDE.md の 3 段階の「先に聞く」。例: migration、依存の追加、外部との契約、権限、`.env` や起動の設定）。
   実装セッションはその印で止まって聞く。印が無いと、止まらずに進む
 - 1 ステップ = `scripts/check.sh --quick` が通る単位。2〜3 ステップごとに全体の `scripts/check.sh` を回す**チェックポイント**を todo に置く
-- 最後のステップは固定: `scripts/check.sh`（全体）→ `/ui-check` → `/ac-review` → `/ship`（docs の更新と PR）。
+- 最後のステップは固定: `scripts/check.sh`（全体）→ `/ui-check` → `/ac-review` → `/deliver`（docs の更新と PR）。
   `/ui-check` は、画面に関わる AC と申し送り「画面の確認」の「未確認」を動いている app で確かめてスクショを残す（画面に関わる AC が無ければ飛ばす）
 - todo.md の「画面の確認」に、画面に関わる AC（Then に画面の表示・操作があるもの、または「完了の見た目」に関わるもの）の行をすべて「AC-XXX-n: 未確認: <実機で見ること>」で作る。
   build・ui-check・fix はこの行を書き換えるだけで、行を足さない（行が無い画面の AC を見つけたときだけ作る）
@@ -197,7 +197,7 @@ spec に無い技術の約束をここで決める。新しい URL・ルート�
 - 確認:
 
 ### P-n: 仕上げ
-- `scripts/check.sh`（全体）→ `/ui-check`（画面に関わる AC と申し送り「画面の確認」の「未確認」を実機で確かめ、スクショを project.md の「スクショ」の置き場に残す。画面に関わる AC が無ければ飛ばす）→ `/ac-review`（spec の AC と ui-check の結果に照らす）→ `/ship`（spec の影響範囲「docs:」を更新して docs を出し（project.md の「docs の出し方」で PR か直接 push）、app の PR。spec と plan へのリンク。ui-check のスクショは project.md の「PR と課題管理」の方法で付ける）
+- `scripts/check.sh`（全体）→ `/ui-check`（画面に関わる AC と申し送り「画面の確認」の「未確認」を実機で確かめ、スクショを project.md の「スクショ」の置き場に残す。画面に関わる AC が無ければ飛ばす）→ `/ac-review`（spec の AC と ui-check の結果に照らす）→ `/deliver`（spec の影響範囲「docs:」を更新して docs を出し（project.md の「docs の出し方」で PR か直接 push）、app の PR。spec と plan へのリンク。ui-check のスクショは project.md の「PR と課題管理」の方法で付ける）
 
 ## 確認方法
 - コマンド: `scripts/check.sh`（追加で見るものがあれば書く）
@@ -214,7 +214,7 @@ plan: docs/plan/<タスク名>-plan.md
 - [ ] P-2 <見出し>（AC-XXX-2） **先に聞く**
 - [ ] CP-1 全体 `scripts/check.sh`
 - [ ] P-3 <見出し>（AC-XXX-3）
-- [ ] P-n 仕上げ: check.sh 全体 → /ui-check → /ac-review → /ship
+- [ ] P-n 仕上げ: check.sh 全体 → /ui-check → /ac-review → /deliver
 
 ## spec への差し戻し（AC や spec のことで止まったスキルが書き、spec が閉じる。無ければ「なし」）
 - [ ] S-1 <spec に足りない判断・食い違い・おかしい AC>（AC-XXX-n、<P-n／plan／accept-test／review-n／ui-check> で発覚）

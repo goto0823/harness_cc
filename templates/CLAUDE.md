@@ -10,8 +10,8 @@ app の `CLAUDE.md` に、次の 2 節を足す。スキルは「CLAUDE.md の�
 | 規模 | 目安 | 進め方 |
 |---|---|---|
 | 軽微 | typo・文言・lint の指摘。既存のテストで再現できるバグ | spec は要らない。そのまま直す。バグは `/debug <症状>` |
-| 小 | 1 つの振る舞いの追加・変更。新しい URL・列・エラーコードは要らない | `/spec` → `/accept-test`（任意）→ `/build` → `/ui-check` → `/ac-review` → `/ship` |
-| 中以上 | 新しい URL・列・エラーコードが要る。複数の振る舞い。「先に聞く」に触る | `/spec` → `/plan` → `/accept-test` → `/build` → `/ui-check` → `/ac-review` → `/ship` |
+| 小 | 1 つの振る舞いの追加・変更。新しい URL・列・エラーコードは要らない | `/spec` → `/accept-test`（任意）→ `/build` → `/ui-check` → `/ac-review` → `/deliver` |
+| 中以上 | 新しい URL・列・エラーコードが要る。複数の振る舞い。「先に聞く」に触る | `/spec` → `/plan` → `/accept-test` → `/build` → `/ui-check` → `/ac-review` → `/deliver` |
 
 <ここに: PJ で足したい目安があれば>
 

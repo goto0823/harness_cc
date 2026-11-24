@@ -67,6 +67,15 @@ while IFS= read -r f; do
   rel="${f#"$here"/}"
   do_copy "$rel" ".claude/$rel" overwrite
 done < <(find "$here/skills" -type f | sort)
+# 名前を変えたスキルの古いフォルダ（上流のもの）を消す。
+# ship → deliver: Claude Code の組み込みコマンド /ship とぶつかって、/ship でスキルが呼べなくなったため
+for old in ship; do
+  d="$app/.claude/skills/$old"
+  if [ -f "$d/SKILL.md" ] && grep -qx "name: $old" "$d/SKILL.md"; then
+    echo "  消す:       .claude/skills/$old/（名前を変えた古いスキル）"
+    [ "$dry" = 1 ] || rm -rf "$d"
+  fi
+done
 do_copy "scripts/accept.sh" "scripts/accept.sh" overwrite
 do_copy "scripts/lib/check-lib.sh" "scripts/lib/check-lib.sh" overwrite
 
