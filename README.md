@@ -136,6 +136,10 @@ deny は allow より先に評価されるので、`settings.local.json` の all
 - 受け入れテストを直接回すコマンド（project.md の「受け入れテスト」）。例: `"Bash(<テストランナー> tests/Acceptance*)"` と `"Bash(<テストランナー> * tests/Acceptance*)"`
 - 受け入れテストのコピー先を `tests/Acceptance/` から変えたなら、`Read` と `Edit` のパスも変える
 - `gh` 以外で PR を作るなら、そのコマンドと MCP のツール名（例: `"Bash(<PR のコマンド>*)"`、`"mcp__<サーバー>__<PR を作るツール>"`）
+- worktree の docs を本体の docs へのシンボリックリンクで共有するなら（project.md の「並行作業」）、次の 2 つ。worktree で `claude -p` を起動すると、シンボリックリンクの先は作業ディレクトリの外なので、build が todo.md を書けずに止まる
+  - `permissions` に `"additionalDirectories": ["<本体の docs の絶対パス>"]` を足す
+  - 相対パスの deny と同じものを、絶対パス（`//` で始める）でも足す。`"Read(//<本体の docs の絶対パス>/accept/**)"`、`"Edit(//<本体の docs の絶対パス>/accept/**)"`、`"Edit(//<本体の docs の絶対パス>/spec/**)"`、`"Edit(//<本体の docs の絶対パス>/plan/*-plan.md)"`。本体の docs を開くと、相対パスの deny だけでは絶対パスで読まれたときに守りが外れうる
+  - 足したら worktree で確かめる。`claude -p "<todo の置き場に試しのファイルを書く>" --settings .claude/headless-build.json` で書けること、`accept.md` が相対パスでも絶対パスでも読めないこと
 
 deny は**コマンドの文字列の形**で照合する。意味で止めているわけではない。だから PJ のテストのコマンドに合わせて書かないと、何も止めないルールが残るだけで、エラーも出ない。
 
