@@ -205,7 +205,17 @@ quint の入れ方: `npm install -g @informalsystems/quint`（か、app の devD
 | `QUINT_MAX_SAMPLES` | `10000` | 1 つの性質あたり何回試すか |
 | `QUINT_MAX_STEPS` | `30` | 1 回に何歩進むか |
 
- | --changed [<base>]] [--dry-run]`（PJ が持つ）
+#### Rust 版の評価器（`QUINT_BACKEND=rust`）
+- **cargo も Rust も要らない。** quint は、初めて Rust 版で回すときに、OS と CPU に合う**ビルド済みの実行ファイル**（mac の arm64・x64、Linux の arm64・x64、Windows の x64）を GitHub の Releases（`quint-co/quint` の `evaluator/<版>`）から取ってきて、解凍して置く。cargo が要るのは、quint を main ブランチから自分でビルドしたときだけ
+- **置き場は `~/.quint/`**（ホームディレクトリ。PJ の root ではない）。PJ がいくつあっても 1 か所を共有する。環境変数 `QUINT_HOME` で変えられる
+- **取ってくるのは最初の 1 回だけ。** 次からは置いてあるものを使う。quint を上げて評価器の版が変わったら、また 1 回取ってくる
+- **GitHub に出られない環境**（会社のネットワークで止められている、など）では、最初の 1 回で `Failed to fetch from GitHub` になる。Releases のファイルを手で `~/.quint/` の下に置くか、`QUINT_BACKEND=typescript` にする（遅いが取ってこない。1 万回 × 30 歩で数秒）
+- **Claude Code のサンドボックスを有効にしている**と、書き込めるのはふつう起動したディレクトリの下だけなので、`~/.quint/` に置けずに失敗することがある（このハーネスでは確かめていない）。そのときは、最初の 1 回だけ人がターミナルで回して置くか、`QUINT_HOME` を PJ の中（`.gitignore` に入っている `local/` の下）に向ける。
+  `QUINT_HOME` は quint（node）が読むので、`.claude/harness.env` に書くなら `export` を付ける（付けないと `ac-model.sh` の中だけの変数になり、quint に渡らない）:
+
+      export QUINT_HOME="$PWD/local/quint"
+
+### `scripts/check.sh [--quick | --changed [<base>]] [--dry-run]`（PJ が持つ）
 - 引数なし: 全体の検査。`--quick`: 速い検査（build が 1 ステップごとに回す）。通れば終了コード 0、1 つでも落ちれば 1
 - `--changed` と `--dry-run` は任意。変更分の判定を書いた PJ だけが使う（pre-push で変更分だけを回すときなど）
 - 枠組み（オプションの解析、回す／回さないの計画、`run` / `skip`、集計）は `scripts/lib/check-lib.sh`。`check.sh` にはゲートだけを書く
