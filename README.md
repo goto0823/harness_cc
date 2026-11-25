@@ -110,6 +110,7 @@ Claude Code は app のルートで起動する。`headless-build.json` のパ�
 
 ### いつでも禁止（`settings.json`）
 - force push（`--force`、`-f`、`--force-with-lease`、`+refspec`。フラグが後ろに来る形も）
+- `git commit --amend`（後ろに来る形も。docs を worktree で共有すると、ほかのタスクのコミットを書き換えてしまう）
 - `git reset --hard`（後ろに来る形も）
 - `git clean -f`（`-fd`、`-fdx`、`-df` など f を含む組み合わせと `--force`。`-n` は通る）
 - `git restore .`、`git checkout .`、`git checkout -- .`（`./` も）
