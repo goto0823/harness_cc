@@ -14,7 +14,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 
 /spec → /plan → /accept-test → /build → /ui-check → /ac-review → /deliver
   ↕ 承認の前
-/ac-matrix（別の会話で認可の表を埋める）
+/ac-matrix（別の会話で認可の表を埋める）　/ac-model（状態が移り変わるタスクだけ。別の会話で Quint のモデルを書いて回す）
                                    ↓ 壊れたら
                                 /debug
 ```
@@ -24,6 +24,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/arch` | コードを数えて層の構成と依存の向きを出し、規約にするかを人に確かめながら、設計書（`docs/design/`）を書く | 人と対話 |
 | `/spec` | 対話で前提と受け入れ条件（AC）を固め、`docs/spec/<タスク名>-spec.md` に書く | 人と対話 |
 | `/ac-matrix` | spec の AC の本文だけから、誰がどの操作をできる・できないかの表を埋める。AC から読み取れないマスは「未決」にして、spec が人に聞く（§1「認可の表」） | **spec と別の会話**（spec のサブエージェント） |
+| `/ac-model` | spec の AC の本文だけから、状態の移り変わりを Quint のモデルに書き、ランダムに何回も動かして、AC のとおりに作っても起きる事故・たどり着けない状態・行き止まりを探す（§1「状態のモデル」）。spec の `model: 要る` のときだけ | **spec と別の会話**（spec のサブエージェント） |
 | `/plan` | approved な spec から、作業の順番と AC → テストの一覧を書く（中以上だけ） | 新しいセッション |
 | `/accept-test` | AC から、build が読めない受け入れテストを書き、「今は落ちる」を確かめる | **build と別のモデル** |
 | `/build` | plan の順に 1 ステップずつ red → green → 確認 → コミット。判断が要ったら止まる | 新しいセッション |
@@ -56,6 +57,14 @@ spec の承認の前に、AC から「誰がどの操作をできる・できな
 - **スクリプトが見るのは形だけ。** 全部の操作 × 行に答えが 1 つずつあるか、答えが できる／できない／未決／矛盾 のどれかか、出典の AC が実在するか、表の後に AC が変わっていないか。AC の読み方の正しさは見ない（それは別の会話にしたことで担保する）
 - accept-test は `AUTHZ OK` を入口にし、ロール別のテストの行を表から写す
 
+### 状態のモデル（Quint。状態が移り変わるタスクだけ）
+認可の表は 1 枚の表で時間の流れが無いので、「再返金が 2 回押されたら 2 回返金される」のような事故は見つからない。そういうタスク（状態が 3 つ以上ある、同じ操作が 2 回・同時に来うる、お金や回数がずれると困る）は、spec で人が `model: 要る` にし、承認の前に `/ac-model` を通す。
+- **書くのは spec と別の会話。** AC の節だけを読み、AC に書いていない振る舞い（同時に来る、失敗する、順番が入れ替わる）は決めつけずに「どちらもありうる」にする。AC に無い守りを足して事故を消さない
+- **`scripts/ac-model.sh check` が見るもの:** 型、起きてはいけないこと（`quint run --invariant`）、AC の Then の状態にたどり着けるか（`--observation`）、行き止まり（終わりでないのに進めなくなる道すじ。道すじの長さで見る）、表と `val` の名前、出典の AC、表の後に AC が変わっていないか
+- **言い方:** `quint run` はランダムに試すだけで、全部の状態は調べない。`MODEL OK` は「ランダムに試して見つからなかった」で、「起きない」ではない。全部調べたくなったら、同じモデルを `quint verify`（Apalache。Java が要るので Docker で動かす）に渡せる
+- 事故・たどり着けない・行き止まりは spec が人に聞き、答えを AC に書き足して、モデルは別の会話で作り直す
+- Java は要らない。要るのは Node.js と quint（§4）
+
 ### 外の約束
 新しい URL・パラメータ名・画面に渡すデータの名前・エラーコード・列は、plan.md の「外の約束」に番号付きで置く。build と accept-test はそこだけを使う。
 accept-test が勝手に決めた URL に頼ると、build が別の正しい作り方をしたときに、build のせいではないのに落ちるから。
@@ -75,7 +84,7 @@ harness_cc を clone して、app のルートを渡す:
 
 | 種類 | ファイル | install.sh の扱い |
 |---|---|---|
-| **上流が持つ**（ハーネスの更新で変わる。app では書き換えない） | `.claude/skills/*`、`scripts/accept.sh`、`scripts/ac-matrix.sh`、`scripts/lib/check-lib.sh` | いつも上書き。ハーネスを更新したら、もう一度 install.sh を回す |
+| **上流が持つ**（ハーネスの更新で変わる。app では書き換えない） | `.claude/skills/*`、`scripts/accept.sh`、`scripts/ac-matrix.sh`、`scripts/ac-model.sh`、`scripts/lib/check-lib.sh` | いつも上書き。ハーネスを更新したら、もう一度 install.sh を回す |
 | **PJ が持つ**（最初に 1 回作ったら、あとは PJ が書き換える） | `.claude/project.md`、`.claude/harness.env`、`.claude/headless-build.json`、`scripts/check.sh` | 無いときだけ作る。あれば触らない |
 | **app にもう設定がある** | `.claude/settings.json`、`CLAUDE.md`、`.gitignore` | 触らない。足りないものを出すので、手で足す |
 
@@ -182,7 +191,21 @@ deny は**コマンドの文字列の形**で照合する。意味で止めて�
 - `new`: `docs/spec/<タスク名>-authz.md` の枠を作る（あれば作り直す）。AC の節の cksum を `ac_sum` に入れる
 - `check`: 操作ごとに行 × 答えを並べて出し、「人に聞くこと」（未決・矛盾）と「表の形の誤り」（抜け・重複・消した行・無い AC の番号）と「古い」（`ac_sum` が今の AC と違う）を出す。終了コード 0 = `AUTHZ OK`、1 = どれかがある、2 = 使い方の誤り・ファイルや設定が無い
 
-### `scripts/check.sh [--quick | --changed [<base>]] [--dry-run]`（PJ が持つ）
+### `scripts/ac-model.sh new|check <タスク名>`（上流が持つ）
+状態のモデル（§1「状態のモデル」）の道具。AC の節は `scripts/ac-matrix.sh ac` で出す。
+- `new`: `docs/spec/<タスク名>-model.qnt`（Quint のモデル）と `-model.md`（起きてはいけないこと・たどり着けること・どちらもありうるにしたこと・未決）の枠を作る
+- `check`: `quint typecheck` のあと、起きてはいけないことを 1 つずつ `quint run --invariant`、たどり着けることを 1 つずつ `--observation`、行き止まりを `--no-invariant` で回す。シードは毎回変え、出力に出す（同じ道すじを出し直すときに使う）。終了コード 0 = `MODEL OK`、1 = どれかがある、2 = 使い方の誤り・ファイルや quint が無い
+
+quint の入れ方: `npm install -g @informalsystems/quint`（か、app の devDependencies に入れて `npx`）。Java は要らない。設定は環境変数か `.claude/harness.env`:
+
+| 名前 | 既定 | 中身 |
+|---|---|---|
+| `QUINT_CMD` | PATH の `quint`。無ければ `npx --no-install quint` | quint の呼び方 |
+| `QUINT_BACKEND` | `rust` | `rust` は速いが、初回に GitHub から評価器を取ってくる。取ってこられない環境では `typescript` |
+| `QUINT_MAX_SAMPLES` | `10000` | 1 つの性質あたり何回試すか |
+| `QUINT_MAX_STEPS` | `30` | 1 回に何歩進むか |
+
+ | --changed [<base>]] [--dry-run]`（PJ が持つ）
 - 引数なし: 全体の検査。`--quick`: 速い検査（build が 1 ステップごとに回す）。通れば終了コード 0、1 つでも落ちれば 1
 - `--changed` と `--dry-run` は任意。変更分の判定を書いた PJ だけが使う（pre-push で変更分だけを回すときなど）
 - 枠組み（オプションの解析、回す／回さないの計画、`run` / `skip`、集計）は `scripts/lib/check-lib.sh`。`check.sh` にはゲートだけを書く
@@ -270,6 +293,7 @@ headless-build.json        build のときだけ禁止（app の .claude/ へ。
 skills/                    11 のスキル（app の .claude/skills/ へ。arch は設計書のテンプレートつき）
 scripts/accept.sh          受け入れテストを採点のときだけ回す（app の scripts/ へ）
 scripts/ac-matrix.sh       認可の表の枠を作り、埋めたものを確かめる（app の scripts/ へ）
+scripts/ac-model.sh        状態のモデルの枠を作り、Quint で回して確かめる（app の scripts/ へ）
 scripts/lib/check-lib.sh   check.sh の枠組み（app の scripts/lib/ へ）
 templates/project.md       PJ ごとの値を書く雛形（app の .claude/project.md へ）
 templates/harness.env      スクリプトが読む PJ ごとの設定の雛形（app の .claude/harness.env へ）
@@ -283,7 +307,7 @@ examples/                  PJ の見本（今は laravel-vue）
 
 ## 8. オーケストレーション（`/orchestrate`）
 `/orchestrate <タスク名>` で、spec から deliver までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
-- spec・plan・debug・deliver はサブエージェント（作る側のモデル）、ac-matrix・accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
+- spec・plan・debug・deliver はサブエージェント（作る側のモデル）、ac-matrix・ac-model・accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
 - build と build fix は `claude -p "/build auto <タスク名>" --settings .claude/headless-build.json --model <作る側>` で回す。§3 の deny は `--settings` で読ませたときだけ効き、サブエージェントには効かないため
 - サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。「## 質問」には、問いのほかに、答えを書く下書きのパスと、問いの材料にした前提の表（内容と根拠の `file:line`）を付ける。オーケストレーターはその表をそのまま画面に出してから AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
 - 状態は全部ファイルにあるので、止まっても `/orchestrate <タスク名>` で続きから再開できる

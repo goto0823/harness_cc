@@ -73,6 +73,7 @@ build はこのテストを見ない。テストが勝手に決めた URL・パ�
 ### 0. 入口を確かめる（1 つでも満たさなければ止まる）
 - spec が `status: approved`。中以上なら plan も `status: approved` で、plan.md に「外の約束」の節がある（無ければ「plan に外の約束の節を足して」と伝えて止まる）
 - `scripts/ac-matrix.sh check <タスク名>` が `AUTHZ OK`（終了コード 0）。表が無い・古い（spec の AC が表の後に変わった）・未決が残るなら、「先に `/spec <タスク名>` で認可の表を通して（spec の 5a）」と伝えて止まる。表はこのスキルでは作らない・直さない
+- spec が `model: 要る` なら、`scripts/ac-model.sh check <タスク名>` も `MODEL OK`。そうでなければ「先に `/spec <タスク名>` で状態のモデルを通して（spec の 5b）」と伝えて止まる。モデルは読まなくてよい（テストの元は AC）
 - todo.md があれば、「spec への差し戻し」に `[ ]` の行が無い。あれば「先に `/spec <タスク名>` で S-n を直して」と伝えて止まる
 - build が始まっていない: `docs/plan/<タスク名>-todo.md` の作業順に `[x]` が無い（todo が無ければそれでよい）。app のブランチがあるなら `git log origin/<base>..HEAD`（`<base>` は spec の `base:`。無ければ project.md の「PR の向き先」）が空
 - `docs/accept/<タスク名>/accept.md` が `approved` でない。`draft` があれば続きから

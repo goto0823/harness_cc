@@ -52,7 +52,7 @@ spec・plan・accept-test・build・ui-check・ac-review・deliver は、それ�
 
 ## 設定（変えるときはここだけ直す）
 - 作る側のモデル（spec・plan・build・build fix・debug・deliver）: `opus`
-- 審判側のモデル（ac-matrix・accept-test・ui-check・ac-review）: `fable`。作る側と同じにしない
+- 審判側のモデル（ac-matrix・ac-model・accept-test・ui-check・ac-review）: `fable`。作る側と同じにしない
 - fail → build fix → 再レビューの周回の上限: **2 周**。超えたら人に聞く
 - build のログの置き場: app のルート直下の `local/orchestrate/<タスク名>/`（git 管理外。app の `.gitignore` に `/local/` を入れておく）。サンドボックスで書けなければ、書ける場所を人に聞く
 
@@ -60,7 +60,7 @@ spec・plan・accept-test・build・ui-check・ac-review・deliver は、それ�
 | スキル | 動かし方 | モデル |
 |---|---|---|
 | spec・plan・debug・deliver | サブエージェント（Agent ツール。`model` に作る側） | 作る側 |
-| ac-matrix・accept-test・ui-check・ac-review | サブエージェント（Agent ツール。`model` に審判側） | 審判側 |
+| ac-matrix・ac-model・accept-test・ui-check・ac-review | サブエージェント（Agent ツール。`model` に審判側） | 審判側 |
 | build・build fix | `claude -p` を Bash で（下の形） | 作る側 |
 
 build だけ `claude -p` にするのは、受け入れテストを見えなくする deny（`Read(docs/accept/**)` など）が `headless-build.json` を読ませたときだけ効くから。

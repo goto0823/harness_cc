@@ -7,7 +7,7 @@
 #
 # ファイルは 2 種類に分けて扱う:
 #   上流が持つもの（ハーネスの更新で変わる。app では書き換えない）… いつも上書きする
-#     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/ac-matrix.sh、scripts/lib/check-lib.sh
+#     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/ac-matrix.sh、scripts/ac-model.sh、scripts/lib/check-lib.sh
 #   PJ が持つもの（最初に 1 回作ったら、あとは PJ が書き換える）… 無いときだけ作る。あれば触らない
 #     .claude/project.md、.claude/harness.env、.claude/headless-build.json、scripts/check.sh
 #   app にもう設定があるもの … 触らず、手で足すものを出す
@@ -78,6 +78,7 @@ for old in ship; do
 done
 do_copy "scripts/accept.sh" "scripts/accept.sh" overwrite
 do_copy "scripts/ac-matrix.sh" "scripts/ac-matrix.sh" overwrite
+do_copy "scripts/ac-model.sh" "scripts/ac-model.sh" overwrite
 do_copy "scripts/lib/check-lib.sh" "scripts/lib/check-lib.sh" overwrite
 
 echo "==> PJ が持つもの（無いときだけ作る）"
