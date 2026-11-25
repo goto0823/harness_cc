@@ -7,7 +7,7 @@
 #
 # ファイルは 2 種類に分けて扱う:
 #   上流が持つもの（ハーネスの更新で変わる。app では書き換えない）… いつも上書きする
-#     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/lib/check-lib.sh
+#     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/ac-matrix.sh、scripts/lib/check-lib.sh
 #   PJ が持つもの（最初に 1 回作ったら、あとは PJ が書き換える）… 無いときだけ作る。あれば触らない
 #     .claude/project.md、.claude/harness.env、.claude/headless-build.json、scripts/check.sh
 #   app にもう設定があるもの … 触らず、手で足すものを出す
@@ -77,6 +77,7 @@ for old in ship; do
   fi
 done
 do_copy "scripts/accept.sh" "scripts/accept.sh" overwrite
+do_copy "scripts/ac-matrix.sh" "scripts/ac-matrix.sh" overwrite
 do_copy "scripts/lib/check-lib.sh" "scripts/lib/check-lib.sh" overwrite
 
 echo "==> PJ が持つもの（無いときだけ作る）"
@@ -116,6 +117,10 @@ fi
 if [ -e "$app/.claude/project.md" ] && ! grep -q '同時に回すタスクの数' "$app/.claude/project.md"; then
   echo "  手で足す:   .claude/project.md の「## 並行作業」に新しい項目"
   notes+=(".claude/project.md の「## 並行作業」を harness_cc/templates/project.md のものに合わせる（置き場・worktree ごとに分けるもの・同時に回すタスクの数・子の cc の起動。/pm run を使わないなら「なし」）")
+fi
+if [ -e "$app/.claude/project.md" ] && ! grep -q '^### 認可の表の行' "$app/.claude/project.md"; then
+  echo "  手で足す:   .claude/project.md の「## ロール」に「### 認可の表の行」の節"
+  notes+=(".claude/project.md の「## ロール」に harness_cc/templates/project.md の「### 認可の表の行」の節を足して埋める（spec の承認の前に、/ac-matrix が認可の表を作るのに使う）")
 fi
 if [ -e "$app/.claude/headless-build.json" ] && ! grep -qF '"Bash(bee *)"' "$app/.claude/headless-build.json"; then
   echo "  手で足す:   .claude/headless-build.json の deny に \"Bash(bee)\" と \"Bash(bee *)\""
