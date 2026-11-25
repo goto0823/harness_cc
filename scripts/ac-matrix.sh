@@ -58,7 +58,7 @@ if [ "$cmd" = ac ]; then
   exit 0
 fi
 
-# project.md の「### 認可の表の行」の表の 1 列目（行の名前）と 2 列目（説明）を、タブ区切りで出す
+# project.md の「### 認可の表の行」の表の 1 列目（行の名前）と、説明（2 列目が ○ なら「よそ。」を頭に付け、3 列目を続ける）を、タブ区切りで出す
 project_rows() {
   awk '
     function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
@@ -69,7 +69,9 @@ project_rows() {
       if (!hdr) { hdr = 1; next }               # 見出しの行
       s = $0; sub(/^[ \t]*\|/, "", s); sub(/\|[ \t]*$/, "", s)
       n = split(s, c, "|")
-      name = trim(c[1]); desc = (n >= 2) ? trim(c[2]) : ""
+      name = trim(c[1]); far = (n >= 2) ? trim(c[2]) : ""; desc = (n >= 3) ? trim(c[3]) : ""
+      if (far != "" && far != "○") { print "BAD\t" name; next }
+      if (far == "○") desc = (desc == "") ? "よそ" : "よそ。" desc
       if (name != "") print name "\t" desc
     }
   ' "$project"
@@ -82,6 +84,11 @@ fi
 rows="$(project_rows)"
 if [ -z "$rows" ]; then
   echo "NG: ${project} の「## ロール」に「### 認可の表の行」の表が無い（harness_cc の templates/project.md を見て足す）" >&2
+  exit 2
+fi
+bad="$(printf '%s\n' "$rows" | awk -F'\t' '$1 == "BAD" { print $2 }')"
+if [ -n "$bad" ]; then
+  echo "NG: ${project} の「### 認可の表の行」の「よそ」の列は ○ か空にする: $(printf '%s' "$bad" | tr '\n' ' ')" >&2
   exit 2
 fi
 if printf '%s\n' "$rows" | grep -q '<ここに'; then

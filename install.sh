@@ -121,7 +121,7 @@ if [ -e "$app/.claude/project.md" ] && ! grep -q '同時に回すタスクの数
 fi
 if [ -e "$app/.claude/project.md" ] && ! grep -q '^### 認可の表の行' "$app/.claude/project.md"; then
   echo "  手で足す:   .claude/project.md の「## ロール」に「### 認可の表の行」の節"
-  notes+=(".claude/project.md の「## ロール」に harness_cc/templates/project.md の「### 認可の表の行」の節を足して埋める（spec の承認の前に、/ac-matrix が認可の表を作るのに使う）")
+  notes+=(".claude/project.md の「## ロール」に harness_cc/templates/project.md の「### 認可の表の行」の節を足して埋める（spec の承認の前に、/ac-matrix が認可の表を作るのに使う）。「## 受け入れテスト」の「ロールの書き方」と「## ロール」の「よそ」をもう埋めてあるなら、その名前を表に移し、元の 2 行は templates/project.md のとおり表を指す文にする（名前を 2 か所に書かない）")
 fi
 if [ -e "$app/.claude/headless-build.json" ] && ! grep -qF '"Bash(bee *)"' "$app/.claude/headless-build.json"; then
   echo "  手で足す:   .claude/headless-build.json の deny に \"Bash(bee)\" と \"Bash(bee *)\""
