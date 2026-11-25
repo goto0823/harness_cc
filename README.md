@@ -15,6 +15,8 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 /spec → /plan → /accept-test → /build → /ui-check → /ac-review → /deliver
                                    ↓ 壊れたら
                                 /debug
+
+/replace <機能>（1 つの機能を、振る舞いを変えずに設計書どおりに作り直すとき。単体で回す）
 ```
 
 | スキル | やること | どのセッションで |
@@ -25,6 +27,7 @@ PJ ごとに違うこと（テストのコマンド、起動のしかた、ロ�
 | `/accept-test` | AC から、build が読めない受け入れテストを書き、「今は落ちる」を確かめる | **build と別のモデル** |
 | `/build` | plan の順に 1 ステップずつ red → green → 確認 → コミット。判断が要ったら止まる | 新しいセッション |
 | `/debug` | 再現テストで red を見て、根本原因を書いて止まり、「直して」で直す | 新しいセッション |
+| `/replace` | 設計書と機能のコード・テストを読み、スコープと改修案の差分をターミナルに出して討論する。決まったことを `docs/replace/<機能名>-replace.md` に書き、「改修して」のあとで md の順に直す。振る舞いは変えない。ほかのスキルを通さない | 人と対話 |
 | `/ui-check` | 動いている app を Playwright で開いて、画面の AC を確かめ、スクショを残す | 新しいセッション |
 | `/ac-review` | spec と plan に照らして採点し、`docs/review/` に書く。受け入れテストもここで回す | **build と別のモデル** |
 | `/deliver` | レビューが pass のものを、docs と app の PR にして出す | 人と対話 |
@@ -200,7 +203,7 @@ check-lib.sh の決まり:
 
 ## 5. docs のリポジトリ
 
-spec・plan・todo・review・debug・受け入れテストは、app とは別の git リポジトリに置き、app の `docs/` に clone する。app の `.gitignore` で `/docs/` ごと無視する。
+spec・plan・todo・review・debug・replace・受け入れテストは、app とは別の git リポジトリに置き、app の `docs/` に clone する。app の `.gitignore` で `/docs/` ごと無視する。
 
 ```
 docs/
@@ -209,6 +212,7 @@ docs/
   accept/<タスク名>/accept.md と受け入れテスト
   review/<タスク名>-review-<n>.md
   debug/<YYYY-MM-DD>-<短い名前>.md
+  replace/<機能名>-replace.md（/replace。決めたことと進み具合）
   pm/<要望名>.md（/pm。タスクの一覧と、Backlog の課題キー）
 ```
 
