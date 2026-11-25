@@ -220,6 +220,12 @@ Backlog に書く前に、ターミナルにまとめの表を出す。ここま
 - `docs/pm/<要望名>.md` が `status: approved`
 - project.md の「並行作業」の「置き場」「始め方」「終わり方」「worktree ごとに分けるもの」「同時に回すタスクの数」「子の cc の起動」が埋まっている。「同時に回すタスクの数」が `1` なら、並べずに 1 つずつ回す
 - 「worktree の中の docs」が共有（シンボリックリンク）なら、「docs の出し方」が `直接 push`。`PR` のままなら、理由（deliver が docs のブランチを切り替えると、ほかのタスクのコミットが PR に混ざる）を出して止まる
+- 本体へのシンボリックリンクで共有するもの（「worktree の中の docs」が共有なら `docs`。「始め方」で `ln -s` しているものがあれば、それも。ふつうは `local`）が、子の cc から確認なしで読み書きできるか。
+  cc はリンク先の実体で作業ディレクトリの中かを見るので、足りないと子が docs や `local/orchestrate/` に触るたびに、auto でも確認のダイアログで止まる。共有しないなら飛ばす
+  - 「子の cc の起動」に、共有するものごとに `--add-dir <本体の絶対パス>/<それ>` がある。パスは絶対パス（`/` で始まる）で、`realpath` が本体の `$(pwd -P)/<それ>` と同じ（この会話は本体のルートにいる）
+  - 本体のルートそのもの（`$(pwd -P)`）を `--add-dir` にしていない（子が本体の app のコードを書けてしまう）
+  - docs を共有するなら、`.claude/headless-build.json` の `permissions.additionalDirectories` にも本体の docs の絶対パスがある（build の `claude -p` は子の `--add-dir` を引き継がない。無いと build が todo.md を書けずに止まる。絶対パスの deny も要る。README §3 の「足すもの」）
+  - 足りなければ、子を立ち上げずに止まる。足りないものを、そのまま貼れる形で出す（例: 「子の cc の起動」に `--add-dir /home/me/app/docs --add-dir /home/me/app/local` を足す）。project.md は install.sh で上書きされないので、テンプレに例が入る前に埋めた project.md では抜けていることが多い
 - 回している状態の置き場 `local/pm/<要望名>/` を作る（`mkdir -p`）。`local/` は git 管理外。前に回した `local/pm/<要望名>/state.md` があれば読んで、続きから始める（`herdr agent list` で、子がまだ生きているかを見る）
 
 ### run 1. 始めるタスクを決める
@@ -360,6 +366,7 @@ updated: YYYY-MM-DD
 - ヘッドレスで Backlog に書いた
 - `/pm run` で、子の pm-<n>.md 以外（パネルの画面、コード・テスト・レビューの中身）を読んで判断した。子の質問に自分で答えた。問いや選択肢を書き換えた
 - `/pm run` で、子の許可のダイアログ（blocked）に `herdr agent send-keys` などで答えた
+- `/pm run` で、docs や `local` をシンボリックリンクで共有しているのに、「子の cc の起動」に本体のそれの `--add-dir` が無いまま子を立ち上げた。本体のルートごと `--add-dir` にした
 - `/pm run` で、子を `sleep` やポーリングで待った。`herdr agent prompt` に `--wait` を付けて pm が止まった。止まった子を聞かずに回し直した
 - 人が作っていないパネル・ワークスペースを閉じた。`herdr server stop` を打った
 - 依存先のマージを人に確かめずに、依存しているタスクの build を進めさせた。マージを自分でした
