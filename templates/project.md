@@ -95,7 +95,7 @@ worktree で、同時に 2 つ以上のタスクを進めるとき（`/pm run` �
 - worktree の中の docs: <ここに: 本体の docs へのシンボリックリンクで共有する（推奨）か、コピーか。共有するなら「docs の出し方」は `直接 push` にする（`PR` だと deliver が docs のブランチを切り替えている間、他のタスクのコミットがその PR に混ざる）。各スキルは docs の自分のタスクのファイルだけを見て、`git commit -- <パス>` で自分のファイルだけをコミットする>
 - worktree ごとに分けるもの: <ここに: 例 テストの DB 名（`.claude/harness.env` の `harness_env` で、worktree のディレクトリ名から `app_test_<タスク名>` を作る）、app のポート、`.env` の値。分けないと、同時に回る build のテストが互いのデータを消して、コードが正しくても落ちる>
 - 同時に回すタスクの数: <ここに: 例 `2`。テストの DB とポートを分けられないなら `1`（spec・plan・受け入れテストだけ並べたいときも `1` にして、人が別の会話で回す）>
-- 子の cc の起動（`/pm run` が `herdr agent start <名前> --kind claude --pane <パネル> -- <ここの引数>` で使う）: <ここに: 例 `--model opus --permission-mode acceptEdits`。許していない操作は子のパネルで確認のダイアログになり、人がそのパネルで答える（pm は答えない）。止まる回数を減らすなら、子が使うもの（編集、`scripts/check.sh`、docs と app の `git add` / `git commit`、`claude -p`（build））を `.claude/settings.local.json` の allow で通す。`git push`（deliver）は、deliver が人の「出す」を待つので、確認が出てもよい>
+- 子の cc の起動（`/pm run` が `herdr agent start <名前> --kind claude --pane <パネル> -- <ここの引数>` で使う）: <ここに: 例 `--model opus --permission-mode auto`。`acceptEdits` で自動で通るのは編集だけで、`git` や `scripts/check.sh` は毎回子のパネルで確認のダイアログになる。auto でも分類器が危ないと見た操作は確認になり、人がそのパネルで答える（pm は答えない）。auto を使わないなら、子が使うもの（編集、`scripts/check.sh`、docs と app の `git add` / `git commit`、`claude -p`（build））を `.claude/settings.local.json` の allow で通す。`git push`（deliver）は、deliver が人の「出す」を待つので、確認が出てもよい>
 
 ## PR と課題管理
 - PR を作るコマンド: <ここに: 例 `gh pr create --base <ベース> --head <branch> --title "<タイトル>" --body-file <本文のファイル>`>
