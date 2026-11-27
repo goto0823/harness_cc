@@ -327,7 +327,7 @@ examples/                  PJ の見本（今は laravel-vue）
 
 ## 8. オーケストレーション（`/orchestrate`）
 `/orchestrate <タスク名>` で、spec から deliver までを各スキルの新しい会話で順に回す。人は質問に答えるだけ。中身は読まず、判断しない（skills/orchestrate）。
-- spec・plan・debug・deliver はサブエージェント（作る側のモデル）、ac-matrix・ac-model・accept-test・ui-check・ac-review はサブエージェント（審判側のモデル。作る側と別）
+- spec・plan・debug・deliver はサブエージェント（作る側のモデル）、ac-matrix・ac-model・accept-test・ui-check はサブエージェント（審判側（軽い）のモデル）、ac-review はサブエージェント（審判側（重い）のモデル）。審判側はどちらも作る側と別のモデルにする。モデルの名前は orchestrate の「設定」に書く
 - build と build fix は `claude -p "/build auto <タスク名>" --settings .claude/headless-build.json --model <作る側>` で回す。§3 の deny は `--settings` で読ませたときだけ効き、サブエージェントには効かないため
 - サブエージェントは人と話せないので、各スキルの「オーケストレーターから呼ばれたとき」で、聞くことを「## 質問」の形で返す。「## 質問」には、問いのほかに、答えを書く下書きのパスと、問いの材料にした前提の表（内容と根拠の `file:line`）を付ける。オーケストレーターはその表をそのまま画面に出してから AskUserQuestion で聞き、答えを「## 人の答え」で次の会話に渡す
 - 状態は全部ファイルにあるので、止まっても `/orchestrate <タスク名>` で続きから再開できる
@@ -367,7 +367,7 @@ herdr
 ### 初回に確かめること
 1. `claude -p` の中で `/build auto` がスキルとして呼べるか（呼べなければ「build スキルで auto <タスク名> を進めて」と書く）
 2. ヘッドレスの build が、編集・`scripts/check.sh`・`git add` / `git commit` を確認なしで通せるか（`settings.local.json` の allow か `--permission-mode` が要るか）
-3. Agent ツールの `model` に審判側のモデルを渡せるか。審判側のサブエージェントから Playwright の MCP が使えるか
+3. Agent ツールの `model` に審判側（重い・軽い）のモデルを渡せるか。審判側のサブエージェントから Playwright の MCP が使えるか
 4. `disable-model-invocation: true` で、Claude が自分から `/orchestrate` を呼ばないか
 5. （`/pm run` を使うなら）`herdr agent start <名前> --kind claude` で立ち上げた cc に `herdr agent prompt` で `/orchestrate pm <タスク名>` を送って、スキルとして動くか
 6. 子の cc が、確認のダイアログ・AskUserQuestion・裏で build を待っている間を、herdr がそれぞれ `blocked`・`blocked`・`idle` と見分けるか（`herdr agent get <名前>`。`herdr integration install claude` を入れると確かになる）
