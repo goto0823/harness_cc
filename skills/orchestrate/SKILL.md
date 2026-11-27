@@ -52,7 +52,9 @@ spec・plan・accept-test・build・ui-check・ac-review・deliver は、それ�
 
 ## 設定（変えるときはここだけ直す）
 - 作る側のモデル（spec・plan・build・build fix・debug・deliver）: `opus`
-- 審判側のモデル（ac-matrix・ac-model・accept-test・ui-check・ac-review）: `fable`。作る側と同じにしない
+- 審判側（重い）のモデル（ac-review）: `fable`。コードが AC どおりかを最後に見るのは ac-review だけで、機械で確かめられないところを見る
+- 審判側（軽い）のモデル（ac-matrix・ac-model・accept-test・ui-check）: `sonnet`。出来は機械か人が確かめる（ac-matrix は `ac-matrix.sh check`、ac-model は quint、accept-test は「今は落ちる」と人の承認、ui-check は Playwright のスクショ）。ac-matrix と ac-model は AC を直すたびに回るので、軽くすると制限に効く
+- 審判側は重いも軽いも、作る側と同じモデルにしない（同じモデルだと、作る側と同じところを見落とす）。ここを変えるときも守る
 - fail → build fix → 再レビューの周回の上限: **2 周**。超えたら人に聞く
 - build のログの置き場: app のルート直下の `local/orchestrate/<タスク名>/`（git 管理外。app の `.gitignore` に `/local/` を入れておく）。サンドボックスで書けなければ、書ける場所を人に聞く
 
@@ -60,7 +62,8 @@ spec・plan・accept-test・build・ui-check・ac-review・deliver は、それ�
 | スキル | 動かし方 | モデル |
 |---|---|---|
 | spec・plan・debug・deliver | サブエージェント（Agent ツール。`model` に作る側） | 作る側 |
-| ac-matrix・ac-model・accept-test・ui-check・ac-review | サブエージェント（Agent ツール。`model` に審判側） | 審判側 |
+| ac-matrix・ac-model・accept-test・ui-check | サブエージェント（Agent ツール。`model` に審判側（軽い）） | 審判側（軽い） |
+| ac-review | サブエージェント（Agent ツール。`model` に審判側（重い）） | 審判側（重い） |
 | build・build fix | `claude -p` を Bash で（下の形） | 作る側 |
 
 build だけ `claude -p` にするのは、受け入れテストを見えなくする deny（`Read(docs/accept/**)` など）が `headless-build.json` を読ませたときだけ効くから。
@@ -131,7 +134,7 @@ build だけ `claude -p` にするのは、受け入れテストを見えなく�
 - 終わった（「次」がスキルを指している） → 1 に戻る
 
 並べて回すとき（spec が「次」に `/ac-matrix` と `/ac-model` を並べたとき）:
-- 2 つのサブエージェントを **1 つのメッセージで同時に出す**（Agent ツールの呼び出しを同じメッセージに 2 つ。どちらも審判側のモデル、プロンプトはいつもの形）。片方を待ってからもう片方を出さない
+- 2 つのサブエージェントを **1 つのメッセージで同時に出す**（Agent ツールの呼び出しを同じメッセージに 2 つ。どちらも審判側（軽い）のモデル、プロンプトはいつもの形）。片方を待ってからもう片方を出さない
 - 両方が返ってから、1 に戻る（どちらの「次」も `/spec` を指す）。片方が失敗したら、もう片方が返るのを待ってから「止まって聞く」
 
 ### 3. build のとき
@@ -175,7 +178,7 @@ deliver が終わったら、deliver の出力（app PR の URL、`PR` なら do
 ## Red Flags
 - コード・テスト・受け入れテスト・レビューの指摘の中身を読んだ。ログの「## build 停止」以外を読んだ
 - build・build fix を `claude -p --settings .claude/headless-build.json` 以外で回した
-- 審判側を作る側と同じモデルで回した
+- 審判側（重い・軽い）を作る側と同じモデルで回した。ac-review を審判側（軽い）で回した
 - サブエージェントの質問を聞かずに自分で答えた。問いや選択肢を書き換えた
 - 「## 質問」の前提の表を画面に出さずに、問いだけを聞いた。表を要約した
 - spec・plan・todo（申し送りの 2 つの行を除く）・レビューを自分で書き換えた
