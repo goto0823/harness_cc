@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/__APP__/.claude/**)",
+      "Edit(/__APP__/scripts/**)"
+    ]
+  }
+}

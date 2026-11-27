@@ -9,7 +9,7 @@
 #   上流が持つもの（ハーネスの更新で変わる。app では書き換えない）… いつも上書きする
 #     .claude/skills/<スキル>/ の中身すべて、scripts/accept.sh、scripts/ac-matrix.sh、scripts/ac-model.sh、scripts/lib/check-lib.sh
 #   PJ が持つもの（最初に 1 回作ったら、あとは PJ が書き換える）… 無いときだけ作る。あれば触らない
-#     .claude/project.md、.claude/harness.env、.claude/headless-build.json、scripts/check.sh
+#     .claude/project.md、.claude/harness.env、.claude/headless-build.json、.claude/child-settings.json、scripts/check.sh
 #   app にもう設定があるもの … 触らず、手で足すものを出す
 #     .claude/settings.json の permissions.deny、CLAUDE.md の 2 節、.gitignore
 set -uo pipefail
@@ -86,6 +86,16 @@ do_copy "templates/project.md" ".claude/project.md" create
 do_copy "templates/harness.env" ".claude/harness.env" create
 do_copy "headless-build.json" ".claude/headless-build.json" create
 do_copy "templates/scripts/check.sh" "scripts/check.sh" create
+# 子の cc（/pm run）に --settings で渡す。中のパスは app の絶対パスにして作る
+if [ -e "$app/.claude/child-settings.json" ]; then
+  echo "  そのまま:   .claude/child-settings.json（PJ のもの。あるので触らない）"
+else
+  echo "  作る:     .claude/child-settings.json"
+  if [ "$dry" != 1 ]; then
+    mkdir -p "$app/.claude"
+    sed "s|__APP__|${app}|g" "$here/templates/child-settings.json" > "$app/.claude/child-settings.json"
+  fi
+fi
 
 echo "==> app にもう設定があるもの（手で足す）"
 if [ -e "$app/.claude/settings.json" ]; then

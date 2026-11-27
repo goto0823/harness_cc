@@ -146,6 +146,16 @@ deny は**コマンドの文字列の形**で照合する。意味で止めて�
 
 対話では、同じことをスキルのルール（build の Red Flags）として守る。設定では止めない。
 
+### /pm run の子のときだけ禁止（`child-settings.json`）
+`/pm run` の子の cc に `--settings` で読み込ませる（project.md の「子の cc の起動」）。install.sh が、中のパスを app の絶対パスにして作る。
+- 本体の `.claude/**` と `scripts/**` の Edit: `"Edit(//<本体の絶対パス>/.claude/**)"`、`"Edit(//<本体の絶対パス>/scripts/**)"`
+
+worktree に `.claude`・`scripts` を本体へのシンボリックリンクで置くとき（ハーネスのファイルを app の git に入れていないとき）に使う。
+cc はリンク先の実体で作業ディレクトリの中かを見る。そして正規表現の `sed`（`sed -n '/…/,/…/p'`）を書き込むかもしれないコマンドとして扱う。だから、子が `project.md` や SKILL.md をそれで読むたびに「作業ディレクトリの外に書く」として、auto でも確認で止まる。
+allow に `Bash(sed -n *)` を足しても、このチェックは allow より先に効くので通らない。
+子の起動に `--add-dir <本体>/.claude --add-dir <本体>/scripts` を足すと止まらなくなるが、そのままだと子が本体のスキルや設定を書ける。この deny を一緒に渡すと、書き込みは止まり、正規表現の `sed` でそこを読むと確認ではなくすぐ拒否になる（子は `awk`・`grep`・Read に切り替えて進む）。
+`head`・`awk`・`grep`・行番号の `sed -n 1,10p` は、どちらでも通る。
+
 ### パスの書き方の注意（公式ドキュメントで確認）
 - ファイルの権限は `Edit(path)` と `Read(path)` だけで照合される。`Write(path)` のルールは受け付けられるが一致しない。`Edit(...)` が Write・Edit・NotebookEdit をまとめて止める
 - `--settings` で渡したファイルの中では、先頭 `/` のパスは「そのファイルのディレクトリ」基準になる（`/docs/spec/**` は `.claude/docs/spec/**` を指す）。
